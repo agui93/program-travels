@@ -1,0 +1,7 @@
+.idea
+.obsidian
+*.iml
+/vendor
+**/cmake-build-debug
+**/cmake-build
+
