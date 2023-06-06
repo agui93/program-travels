@@ -31,12 +31,12 @@
 
 
 
-![ARP帧格式.png](ARP帧格式.png)
+![ARP帧格式.png](attachments/ARP帧格式.png)
 
 
 
 
-![以太网同一广播域下ARP请求的应答机制.png](以太网同一广播域下ARP请求的应答机制.png)
+![以太网同一广播域下ARP请求的应答机制.png](attachments/以太网同一广播域下ARP请求的应答机制.png)
 
 
 
