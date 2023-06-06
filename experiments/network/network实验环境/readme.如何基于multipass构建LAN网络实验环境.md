@@ -15,9 +15,9 @@
 - 安装VisualBox，并配置网络`vboxnet0`
 	- 基于root权限，执行`VirtualBox`命令
 	- 添加网络`vboxnet0`
-		- ![构建LAN_vboxnet0_配置网卡.png](构建LAN_vboxnet0_配置网卡.png)
+		- ![构建LAN_vboxnet0_配置网卡.png](attachments/构建LAN_vboxnet0_配置网卡.png)
 	- 网络`vboxnet0`添加DHCP
-		- ![构建LAN_vboxnet0_添加DHCP.png](构建LAN_vboxnet0_添加DHCP.png)
+		- ![构建LAN_vboxnet0_添加DHCP.png](attachments/构建LAN_vboxnet0_添加DHCP.png)
 	- 网络`vboxnet0`的基本情况
 		- 默认网关是: `192.168.56.1/24`
 		- DHCP地址是: `192.168.56.100/24`
@@ -68,7 +68,7 @@ apt update
 		- `--network name=bridge0,mode=manual`: 对应于enp0s10网卡，桥接到bridge0的网卡
 			- 对应于virtualBox的桥接网卡类型，桥接到bridge0
 	- 使用`visualBox`查看vm01的网卡设置
-		- ![构建LAN_vm01网卡配置.png](构建LAN_vm01网卡配置.png)
+		- ![构建LAN_vm01网卡配置.png](attachments/构建LAN_vm01网卡配置.png)
 		- 网卡1对应`enp0s3`网卡，连接方式是`NAT`
 		- 网卡2对应`enp0s8`网卡，连接方式是`桥接网卡`
 		- 网卡3对应`enp0s9`网卡，连接方式是`HOST-ONLY`
@@ -79,8 +79,8 @@ apt update
 			- `cp 50-cloud-init.yaml 50-cloud-init.yaml.backup`
 		- netplan的样例: `https://netplan.io/examples`
 		- `vm01`的netplan配置样例
-			- ![构建LAN_vm01_设置enp0s9网卡.png](构建LAN_vm01_设置enp0s9网卡.png)
-			- ![构建LAN_vm01_network_status.png](构建LAN_vm01_network_status.png)
+			- ![构建LAN_vm01_设置enp0s9网卡.png](attachments/构建LAN_vm01_设置enp0s9网卡.png)
+			- ![构建LAN_vm01_network_status.png](attachments/构建LAN_vm01_network_status.png)
 	- 常用命令
 		- `netplan try` : 验证配置是否合适
 		- `netplan apply` : 应用新的配置
@@ -89,7 +89,7 @@ apt update
 		- `ip a`
 		- `ip route`
 - 同理，设置`vm02`的网络
-	- ![构建LAN_vm02_network_status.png](构建LAN_vm02_network_status.png)
+	- ![构建LAN_vm02_network_status.png](attachments/构建LAN_vm02_network_status.png)
 - 同理，设置`vm03`的网络
 	- ![构建LAN_vm03_network_status.png](attachments/构建LAN_vm03_network_status.png)
 
@@ -149,13 +149,13 @@ ss -nltp |grep inetd
 
 
 - `openbsd-inetd`服务
-	- ![LAN构建_openbsd-inetd服务列表预览.png](LAN构建_openbsd-inetd服务列表预览.png)
+	- ![LAN构建_openbsd-inetd服务列表预览.png](attachments/LAN构建_openbsd-inetd服务列表预览.png)
 	- `vm01`上`openbsd-inetd`服务
-		- ![LAN构建_vm01_openbsd-inetd服务状态.png](LAN构建_vm01_openbsd-inetd服务状态.png)
+		- ![LAN构建_vm01_openbsd-inetd服务状态.png](attachments/LAN构建_vm01_openbsd-inetd服务状态.png)
 	- `vm02`上`openbsd-inetd`服务
 		- ![LAN构建_vm02_openbsd-inetd服务状态.png](attachments/LAN构建_vm02_openbsd-inetd服务状态.png)
 	- `vm03`上`openbsd-inetd`服务
-		- ![LAN构建_vm03_openbsd-inetd服务状态.png](LAN构建_vm03_openbsd-inetd服务状态.png)
+		- ![LAN构建_vm03_openbsd-inetd服务状态.png](attachments/LAN构建_vm03_openbsd-inetd服务状态.png)
 
 
 
@@ -188,7 +188,6 @@ ss -nltp |grep inetd
 		- ![attachments/LAN构建_TCP_vm01_to_vm02_discard_vm01-tcpdump.png](attachments/LAN构建_TCP_vm01_to_vm02_discard_vm01-tcpdump.png)
 	- 在`vm02`中执行: `tcpdump -i enp0s9 src net 192.168.56.0/24 -n`
 		- ![attachments/LAN构建_TCP_vm01_to_vm02_discard_vm02-tcpdump.png](attachments/LAN构建_TCP_vm01_to_vm02_discard_vm02-tcpdump.png)
-
 
 
 
