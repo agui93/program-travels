@@ -38,7 +38,7 @@
 			- 但在三层上（比如IP）是可以通过路由器让A和B互通的。
 	- 通常交换机的端口有两种配置模式：Access和Trunk
 		- 交换机的Access和Trunk
-			- ![交换机的Access和Trunk.png](attachments/交换机的Access和Trunk.png)
+			- ![交换机的Access和Trunk.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/交换机的Access和Trunk.png)
 		- Access口
 			- 这些端口被打上了VLAN的标签，表明该端口属于哪个VLAN
 			- 不同VLAN用VLAN ID来区分，VLAN ID的范围是1～4096
@@ -50,7 +50,7 @@
 			- 一个母设备（eth0）可以有多个子设备（eth0.10，eth0.20 ......），
 			- 而一个子设备只有一个母设备
 		- 常见的VLAN部署结构样例
-			- ![常见的VLAN部署结构样例.png](attachments/常见的VLAN部署结构样例.png)
+			- ![常见的VLAN部署结构样例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/常见的VLAN部署结构样例.png)
 
 
 # Linux Network Namespace
@@ -105,13 +105,13 @@
 		- 应用程序也可以通过/dev/net/tun字符设备写入数据包，这种情况下该字符设备上写入的数据包会被发送到Tun/Tap虚拟接口上，进入操作系统的TCP/IP协议栈进行相应处理，就像从物理网卡进入操作系统的数据一样
 	- TUN/TAP 使用样例解读
 		- 使用Tun/Tap创建点对点隧道
-			- ![使用Tun创建点对点隧道.png](attachments/使用Tun创建点对点隧道.png)
+			- ![使用Tun创建点对点隧道.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/使用Tun创建点对点隧道.png)
 			- 上图中的隧道也可以采用Tap虚拟设备实现。使用Tap的话，隧道的负载将是以太数据帧而不是IP数据包，而且还会传递ARP等广播数据包。
-				- ![使用Tap创建点对点隧道.png](attachments/使用Tap创建点对点隧道.png)
+				- ![使用Tap创建点对点隧道.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/使用Tap创建点对点隧道.png)
 		- 使用Tun/Tap隧道绕过防火墙
-			- ![使用Tun隧道绕过防火墙.png](attachments/使用Tun隧道绕过防火墙.png)
+			- ![使用Tun隧道绕过防火墙.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/使用Tun隧道绕过防火墙.png)
 		- 使用Tap隧道桥接两个远程站点
-			- ![使用Tap隧道桥接两个远程站点.png](attachments/使用Tap隧道桥接两个远程站点.png)
+			- ![使用Tap隧道桥接两个远程站点.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/使用Tap隧道桥接两个远程站点.png)
 			- 假设192.168.0.5发出了一个对192.168.0.3的ARP请求，该ARP请求在网络中经过的路径如下
 				- 1. 192.168.0.5发出ARP请求，询问192.168.0.3的MAC地址。
 				- 2. 该ARP请求将被发送到以太网交换机上。
@@ -148,7 +148,7 @@
 		- local network
 	- local network
 		- local network的示例
-			- ![attachments/local_network网络结构示例.png](attachments/local_network网络结构示例.png)
+			- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/local_network网络结构示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/local_network网络结构示例.png)
 			- 创建了两个local network，分别对应两个网桥brqXXXX和brqYYYY。
 			- VM0和VM1通过tap0和tap1连接到brqXXXX。
 			- VM2通过tap0和tap2连接到brqYYYY。
@@ -161,8 +161,8 @@
 			- 每个local network有自己的bridge，bridge之间是没有连通的，所以两个local network之间也不能通信，即使它们位于同一宿主机上
 	- flat network
 		- flat_network网络结构示例
-			- ![attachments/flat_network网络结构示例.png](attachments/flat_network网络结构示例.png)
-			- ![attachments/flat_network使用DHCP服务示例.png](attachments/flat_network使用DHCP服务示例.png)
+			- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/flat_network网络结构示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/flat_network网络结构示例.png)
+			- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/flat_network使用DHCP服务示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/flat_network使用DHCP服务示例.png)
 			- 隔离的dnsmasq服务为flat network提供的DHCP服务
 				- Linux Network Namespace 隔离了 `qdhcp-f153b42f-c3a1-4b6c-8865-c09b5b2aa274`，上面运行了`dnsmasq服务`
 				- flat_net的DHCP设备`tap19a0ed3d-fe`，放到`qdhcp-f153b42f-c3a1-4b6c-8865-c09b5b2aa274`中。
@@ -187,7 +187,7 @@
 				- 通过namespace为每个network提供独立的DHCP和路由服务，从而允许租户创建重叠的网络。如果没有namespace，网络就不能重叠，这样就失去了很多灵活性			
 	- vlan network
 		- vlan_network网络结构示例
-			- ![attachments/vlan_network网络结构示例.png](attachments/vlan_network网络结构示例.png)
+			- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/vlan_network网络结构示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/vlan_network网络结构示例.png)
 			- cirros-vm1属于vlan100。
 			- cirros-vm2属于vlan100。
 			- cirros-vm3属于vlan101。
@@ -200,7 +200,7 @@
 			- 路由选择的评估过程
 				- 当TCP/IP需要向某个IP地址发起通信时，会对路由表进行评估，以确定如何发送数据包
 				- 评估过程:
-					- ![attachments/路由选择的评估过程.png](attachments/路由选择的评估过程.png)
+					- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/路由选择的评估过程.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/路由选择的评估过程.png)
 			- Routing Table
 				- 255 local: 保存`本地路由`和`广播路由`，有**系统维护**
 				- 254 main: 所有没有指明路由表的路由保存在该表
@@ -262,17 +262,17 @@
 				- dev if: 指定网络接口发送数据
 			- iproute2
 				- 帮助命令: `man ip-route`
-				- ![ip-route命令支持的操作.png](attachments/ip-route命令支持的操作.png)
-				- ![ip-route命令操作的字段解释.png](attachments/ip-route命令操作的字段解释.png)
+				- ![ip-route命令支持的操作.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/ip-route命令支持的操作.png)
+				- ![ip-route命令操作的字段解释.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/ip-route命令操作的字段解释.png)
 				- 
 			- ip rule
 				- 策略路由规则，帮助命令: `man ip-rule`
 				- Linux系统在启动时，内核会为路由策略数据库配置三条缺省的规则
-				- ![策略路由的缺省规则.png](attachments/策略路由的缺省规则.png)
-				- ![ip-rule命令解释.png](attachments/ip-rule命令解释.png)
+				- ![策略路由的缺省规则.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/策略路由的缺省规则.png)
+				- ![ip-rule命令解释.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/ip-rule命令解释.png)
 		- 物理router
 			- 物理router的示例
-				- ![attachments/物理router的示例.png](attachments/物理router的示例.png)
+				- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/物理router的示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/物理router的示例.png)
 				- 172.16.100.1对应vlan100的网关，172.16.101.1对应vlan101的网关
 				- 当cirros-vm1要跟cirros-vm3通信时，数据包的流向是这样的：
 					- （1）因为cirros-vm1的默认网关指向172.16.100.1，cirros-vm1发送到cirros-vm3的数据包首先通过vlan100的interface进入物理router。
@@ -281,10 +281,10 @@
 		- 虚拟router
 			- 虚拟router的路由机制与物理router一样，只是由软件实现，为subnet提供路由服务
 			- 虚拟router示例
-				- ![attachments/虚拟router示例.png](attachments/虚拟router示例.png)
+				- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/虚拟router示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/虚拟router示例.png)
 				- ROUTER在单独的namespace，使得每个router有自己的路由表，而且不会与其他router冲突，能很好地支持网络重叠(多租户网络)
 			- 虚拟router访问外网示例
-				- ![attachments/虚拟router访问外网示例.png](attachments/虚拟router访问外网示例.png)
+				- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/虚拟router访问外网示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/虚拟router访问外网示例.png)
 				- cirros-vm3Ping到ext_net网关10.10.10.1, 数据包经过两跳到达10.10.10.1网关。
 					- （1）数据包首先发送到router_100_101连接vlan101的interface（172.16.101.1）。
 					- （2）然后通过连接ext_net的interface（10.10.10.2）转发出去，最后到达10.10.10.1。
@@ -355,7 +355,7 @@
 				- 在原始的Layer 2网络包前加上VXLAN header，然后放到UDP和IP包中。
 				- 通过MAC-in-UDP封装，VXLAN能够在Layer 3网络上建立起了一条Layer 2的隧道。
 			- VXLAN包的格式
-				- ![attachments/VXLAN包的格式示例.png](attachments/VXLAN包的格式示例.png)
+				- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/VXLAN包的格式示例.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/VXLAN包的格式示例.png)
 				- VXLAN引入了8-byte VXLAN header，其中VNI占24-bit。
 				- VXLAN和原始的L2 frame被封装到UDP包中。
 				- 这24-bit的VNI用于标示不同的二层网段，能够支持16777216个LAN
@@ -365,13 +365,13 @@
 				- VTEP使用该IP封装Layer 2 frame，
 				- 并通过该IP interface传输和接收封装后的VXLAN数据包。
 			- VTEP示意图
-				- ![attachments/VTEP示意图.png](attachments/VTEP示意图.png)
+				- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/VTEP示意图.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/VTEP示意图.png)
 			- VXLAN独立于底层的网络拓扑，反过来，两个VTEP之间的底层IP网络也独立于VXLAN。
 			- VXLAN数据包是根据外层的IP header路由的，该header将两端的VTEP IP作为源和目标IP
 		- VXLAN包转发流
 			- VXLAN在VTEP间建立隧道，通过Layer 3网络传输封装后的Layer 2数据
 			- VXLAN包转发流示意图
-				- ![attachments/VXLAN包转发流示意图.png](attachments/VXLAN包转发流示意图.png)
+				- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/VXLAN包转发流示意图.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/VXLAN包转发流示意图.png)
 				- Host-A和Host-B位于VNI 10的VXLAN，通过VTEP-1和VTEP-2之间建立的VXLAN隧道通信。数据传输过程如下：
 					- 1）Host-A: Host-A向Host-B发送数据时
 						- Host-B的MAC和IP作为数据包的目标MAC和IP，
@@ -396,7 +396,7 @@
 					- 带VXLAN内核模块的Linux
 					- Open vSwitch
 				- Linux支持VXLAN的示意图
-					- ![attachments/Linux支持VXLAN的示意图.png](attachments/Linux支持VXLAN的示意图.png)
+					- ![蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/Linux支持VXLAN的示意图.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/Linux支持VXLAN的示意图.png)
 				- Linux支持VXLAN的实现方式：
 					- Linux vxlan创建一个UDP Socket，默认在8472端口监听。
 					- Linux vxlan在UDP socket上接收到vxlan包后，解包，
@@ -905,6 +905,38 @@
 
 
 
+# Tcpdump抓包常用命令
+```bash
+# 指定MAC地址抓包
+tcpdump -i eth0 -c 100 ether src 52:54:00:5b:af:40 -nne
+
+# 同时抓多个地址，其中一个方向地址为多个：
+tcpdump -i eth0 host 192.168.57.101 and host '(192.168.56.101 or 192.168.56.102 or 192.168.56.103)' -nn
+
+# 指定源IP和目IP地址抓包
+tcpdump -i eth0 src 192.168.56.101 and dst 192.168.56.102 -nn
+
+
+# 指定网段抓包
+tcpdump src net 192.168.56.0/24 and dst port 80 -c 10 -nn
+
+# 指定不抓某地址或者端口， 按照正常的表达式加一个not就可以了
+tcpdump -i eth0 host 192.168.56.101 and not port 22345 -nn -c 1000
+
+# 带vlan的抓包
+tcpdump -i eth0 host 192.168.56.101 and vlan -c 10 -nn
+
+# 抓取指定TCP标识位的数据包
+# TCP包里有个flags字段表示包的类型，tcpdump可以根据该字段抓取相应类型的包：
+# tcp[13] 就是 TCP flags (URG,ACK,PSH,RST,SYN,FIN)，按照这个计算标志位置位后的数值，只有FIN置位就是1，ACK+SYN置位就是18
+# 抓取FIN包： 
+tcpdump -i any 'tcp[13] &1 !=0' -s0
+# 抓取SYN+FIN包：
+tcpdump -i any -p tcp and 'tcp[13] &3 !=0' -s0
+# 抓取RST包：
+tcpdump -i any port 9001 and 'tcp[13] &4 !=0' -s0
+```
+
 
 
 
@@ -914,7 +946,7 @@
 
 - 网络虚拟化
 	- 逻辑图
-		- ![网络虚拟化的逻辑图.png](attachments/网络虚拟化的逻辑图.png)
+		- ![网络虚拟化的逻辑图.png](蓄水池/blogs/network/Network实验中常用的概念和设备/attachments/网络虚拟化的逻辑图.png)
 	- 设备和工具
 		- veth pair
 		- TUN/TAP device
@@ -925,6 +957,20 @@
 		- Linux route
 		- VLAN
 		- VXLAN
+
+
+# Macvlan
+
+- macvlan
+	- Macvlan 允许主机的一个网络接口上配置多个虚拟的网络接口，这些网络 `interface` 有自己独立的 MAC 地址，也可以配置上 IP 地址进行通信
+	- Macvlan 下的虚拟机或者容器网络和主机在同一个网段中，共享同一个广播域。
+	- Macvlan 自身也支持 `VLAN`
+	- 用 Macvlan 技术虚拟出来的虚拟网卡，在逻辑上和物理网卡是对等的。
+		- 物理网卡也就相当于一个**交换机**，记录着对应的虚拟网卡和 MAC 地址，当物理网卡收到数据包后，会根据目的 MAC 地址判断这个包属于哪一个虚拟网卡
+		- 从 Macvlan 子接口发来的数据包（或者是发往 Macvlan 子接口的数据包），物理网卡只接收数据包，不处理数据包
+		- **本机 Macvlan 网卡上面的 IP 无法和物理网卡上面的 IP 通信！**
+	- docker macvlan
+		- Some applications, especially legacy applications or applications which monitor network traffic, expect to be directly connected to the physical network. 
 
 
 
@@ -960,6 +1006,22 @@
 		- [iptables nat](https://www.zsythink.net/archives/1764)
 		- [iptables详解-运维相关](https://www.zsythink.net/archives/category/%e8%bf%90%e7%bb%b4%e7%9b%b8%e5%85%b3/iptables)
 		- [iptables解析](https://blog.csdn.net/qq_38350702/article/details/106817402)
+	- macvlan资料
+		- [macvlan vs bridge](https://juejin.cn/post/6844903810851143693)
+		- [macvlan的通信模式](https://mp.weixin.qq.com/s?__biz=MzI1OTY2MzMxOQ==&mid=2247485246&idx=1&sn=c42a3618c357ebf5f6b7b7ce78ae568f&chksm=ea743386dd03ba90ad65940321385f68f9315fec16d82a08efa12c18501d8cadf95cf9e614a2&scene=21#wechat_redirect)
+		- [macvlan工作原理](https://blog.csdn.net/dog250/article/details/45788279)
+		- [macvlan 简介](https://mp.weixin.qq.com/s?__biz=MzI1OTY2MzMxOQ==&mid=2247485246&idx=1&sn=c42a3618c357ebf5f6b7b7ce78ae568f&chksm=ea743386dd03ba90ad65940321385f68f9315fec16d82a08efa12c18501d8cadf95cf9e614a2&scene=21#wechat_redirect)
+		- [docker by macvlan](https://www.cnblogs.com/bakari/p/10893589.html)
+		- [docker macvlan network](https://docs.docker.com/network/macvlan/)
+		- [docker macvlan tutorial](https://docs.docker.com/network/network-tutorial-macvlan/)
+	- IPVlan
+		- [Linux网络虚拟化 IPVlan](https://www.cnblogs.com/lovezbs/p/14609276.html)
+		- [虚拟网络技术 ipvlan](https://blog.csdn.net/lsz137105/article/details/100596277)
+		- [Macvlan 和 IPvlan](https://www.cnblogs.com/menkeyi/p/11374023.html)
+		- [IPvlan源码探秘](https://juejin.cn/post/7030291455235080205)
+		- [从 VLAN 到 IPVLAN](https://zhuanlan.zhihu.com/p/544441006)
+		- [从 VLAN 到 IPVLAN](https://mp.weixin.qq.com/s/eGLvJHW5AbQx7KqynSIpLw)
+		- [docker ipvlan](https://docs.docker.com/network/ipvlan/)
 	- [网络虚拟化](https://weread.qq.com/web/reader/40b325805de31c40bd36047k8f132430178f14e45fce0f7)
 		- [openstack](https://www.openstack.org/)
 		- [虚拟机的四种网络模型](https://mp.weixin.qq.com/s?__biz=MzI1OTY2MzMxOQ==&mid=2247485152&idx=1&sn=7e54ffcb0bc29169eeec216a59f584b8&chksm=ea743258dd03bb4e41d5c18fda0010fd1d2140c527ee3f6e70bc5dfb70a301cbb1a7ca72eb0b&scene=21#wechat_redirect)
@@ -968,3 +1030,4 @@
 	- 绘图参考
 		- [OpenVPN用TAP还是TUN好呢？](https://hostloc.com/thread-6508-1-1.html)
 		- [Linux虚拟网络设备之veth](https://segmentfault.com/a/1190000009251098)
+
