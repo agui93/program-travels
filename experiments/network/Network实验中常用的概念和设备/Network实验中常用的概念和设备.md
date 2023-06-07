@@ -197,11 +197,10 @@
 		- vlan network是带tag的网络
 	- Routing
 		- 路由服务提供跨subnet互联互通功能
-			- [Linux route、ip route、ip rule简介](https://blog.csdn.net/zhongmushu/article/details/108220232)
 			- 路由选择的评估过程
 				- 当TCP/IP需要向某个IP地址发起通信时，会对路由表进行评估，以确定如何发送数据包
 				- 评估过程:
-					- ![[attachments/路由选择的评估过程.png]]
+					- ![attachments/路由选择的评估过程.png](attachments/路由选择的评估过程.png)
 			- Routing Table
 				- 255 local: 保存`本地路由`和`广播路由`，有**系统维护**
 				- 254 main: 所有没有指明路由表的路由保存在该表
