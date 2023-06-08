@@ -1,4 +1,7 @@
 
+
+# 网络原理
+- [Network Architecture(包括: 脑图 概念 架构等)](principles/network/Network的Architecture/Network的Architecture.md)
 # 网络实验
 - [如何基于multipass构建LAN网络实验环境](experiments/network/LAN网络实验环境/readme.如何基于multipass构建LAN网络实验环境.md)
 - [如何基于docker构建tcpip详解实验环境](experiments/network/TcpIp详解实验环境/readme.TcpIp详解实验环境.md)
