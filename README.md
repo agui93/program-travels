@@ -3,7 +3,7 @@
 
 ## 网络原理
 - [Network Architecture(包括: 脑图 概念 架构等)](network/principles/Network的Architecture/Network的Architecture.md)
-
+- [Network相关的Questions](network/principles/Network相关的Questions/Network相关的Questions.md)
 ## 网络实验
 - [如何基于multipass构建LAN网络实验环境](network/experiments/LAN网络实验环境/readme.如何基于multipass构建LAN网络实验环境.md)
 - [如何基于docker构建tcpip详解实验环境](network/experiments/TcpIp详解实验环境/readme.TcpIp详解实验环境.md)
@@ -20,6 +20,7 @@
 # 动态追踪
 
 - [DynamicTracing中的概念和工具](dynamic-tracing/dynamicTracing中的概念和工具/dynamicTracing中的概念和工具.md)
+    - [Network相关的Questions: 如何使用DynamicTracing工具去解决](network/principles/Network相关的Questions/Network相关的Questions.md)
 - eBPF
     - [eBPF实验环境(bcc && bpfstrace)](dynamic-tracing/eBPF/eBPF实验环境/eBPF实验环境.md)
 - SystemStap
