@@ -184,15 +184,15 @@
 
 
 - trace-soruces
-	- ![[attachments/linux_tracing_sources.png]]
+	- ![attachments/linux_tracing_sources.png](attachments/linux_tracing_sources.png)
 - [perf tools](https://github.com/brendangregg/perf-tools)
-	- ![[attachments/linux_performance_observability_tools_perf-tools.png.png]]
+	- ![attachments/linux_performance_observability_tools_perf-tools.png.png](attachments/linux_performance_observability_tools_perf-tools.png.png)
 - [bcc/eBPF tools](https://github.com/iovisor/bcc#tools)
-	- ![[attachments/linux_bcc_BPF_tracing_tools.png]]
+	- ![attachments/linux_bcc_BPF_tracing_tools.png](attachments/linux_bcc_BPF_tracing_tools.png)
 - [bpftrace/eBPF tools](https://github.com/iovisor/bpftrace#tools)
-	- ![[attachments/linux_bpftrace_eBPF_tools.png]]
+	- ![attachments/linux_bpftrace_eBPF_tools.png](attachments/linux_bpftrace_eBPF_tools.png)
 - [BPF Performance Tools](https://github.com/brendangregg/bpf-perf-tools-book) 
-	- ![[attachments/BPF_Performance_Tools_By_Brendangregg.png]]
+	- ![attachments/BPF_Performance_Tools_By_Brendangregg.png](attachments/BPF_Performance_Tools_By_Brendangregg.png)
 
 
 ## Other Observability Tools
@@ -202,15 +202,15 @@
 
 - Other Observability Tools
 	- Static Performance Tools
-		- ![[attachments/linux_static_performance_tools.png]]
+		- ![attachments/linux_static_performance_tools.png](attachments/linux_static_performance_tools.png)
 	- sar Tools
-		- ![[attachments/linux_performance_sar_tools.png]]
+		- ![attachments/linux_performance_sar_tools.png](attachments/linux_performance_sar_tools.png)
 	- performance tools
-		- ![[attachments/linux_observability_tools.png]]
+		- ![attachments/linux_observability_tools.png](attachments/linux_observability_tools.png)
 	- benchmark tools
-		- ![[attachments/linux_performance_benchmark_tools.png]]
+		- ![attachments/linux_performance_benchmark_tools.png](attachments/linux_performance_benchmark_tools.png)
 	- tuning tools
-		- ![[attachments/linux_performance_tuning_tools.png]]
+		- ![attachments/linux_performance_tuning_tools.png](attachments/linux_performance_tuning_tools.png)
 	- Other
 		- [Arthas: Alibaba 开源的 Java 诊断工具](https://arthas.aliyun.com/doc/)
 		- [SNMP](https://www.kernel.org/doc/html/v5.0/networking/snmp_counter.html)
