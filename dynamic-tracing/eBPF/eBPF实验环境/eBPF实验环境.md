@@ -230,7 +230,7 @@ apt-get install bpftrace-dbgsym
 
 # 下载bpfstrace(基于0.14.1版本无兼容问题，更高版本的bpfstrace会出现兼容问题)
 wget https://github.com/iovisor/bpftrace/archive/refs/tags/v0.14.1.tar.gz
-tar -zxvf v0.14.0.tar.gz
+tar -zxvf v0.14.1.tar.gz
 cd bpftrace-0.14.1/tools/
 
 
