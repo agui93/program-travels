@@ -19,7 +19,7 @@
 
 # 动态追踪
 
--[DynamicTracing中的概念和工具](dynamic-tracing/dynamicTracing中的概念和工具/dynamicTracing中的概念和工具.md)
+- [DynamicTracing中的概念和工具](dynamic-tracing/dynamicTracing中的概念和工具/dynamicTracing中的概念和工具.md)
 - eBPF
     - [eBPF实验环境(bcc && bpfstrace)](dynamic-tracing/eBPF/eBPF实验环境/eBPF实验环境.md)
 - SystemStap
