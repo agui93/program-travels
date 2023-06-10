@@ -23,8 +23,9 @@
     - [Network相关的Questions: 如何使用DynamicTracing工具去解决](network/principles/Network相关的Questions/Network相关的Questions.md)
 - eBPF
     - [eBPF实验环境(bcc && bpfstrace)](dynamic-tracing/eBPF/eBPF实验环境/eBPF实验环境.md)
+    - [bpfstrace使用指南](dynamic-tracing/eBPF/bpfstrace使用指南/bpfstrace使用指南.md)
 - SystemStap
-    - [SystemStap实验环境](dynamic-tracing/systemtap/systemstap实验环境/systemstap实验环境.md)
+    - [SystemStap实验环境](dynamic-tracing/systemtap/systemtap实验环境/systemtap实验环境.md)
 
 
 
