@@ -8,11 +8,10 @@
 
 
 
-# 动态追踪技术
+# 概览
 
 
 
-## Overview
 
 
 |Tool | Desc|
@@ -28,7 +27,10 @@
 
 
 - 动态追踪技术
-	- 如果有选择，可以先使用传统工具
+	- Use a combination of these tools
+		- 重点是解决问题
+		- eBPF和传统工具的混合使用
+		- The goal is to solve problems, and sometimes it is fastest to use a combination of these tools.
 	- [动态追踪技术漫谈](https://blog.openresty.com.cn/cn/dynamic-tracing/)
 		- [dynamic-tracing-part(1~3)](https://blog.openresty.com/en/dynamic-tracing-part-1/)
 		- [Linux Extended BPF (eBPF) Tracing Tools](https://www.brendangregg.com/ebpf.html)
@@ -84,8 +86,8 @@
 		- [Linux Extended BPF (eBPF) Tracing Tools](https://www.brendangregg.com/ebpf.html)
 			- [iovisor/bcc](https://github.com/iovisor/bcc)
 				- [IO Visor Project](https://github.com/iovisor)
-			- [iovisor/bpfstrace](https://github.com/iovisor/bpftrace)
-				- [bpfstrace](https://bpftrace.org/)
+			- [iovisor/bpftrace](https://github.com/iovisor/bpftrace)
+				- [bpftrace](https://bpftrace.org/)
 			- [BPF Performance Tools (book)](https://www.brendangregg.com/bpf-performance-tools-book.html)
 				- [Official repository for the BPF Performance Tools book](https://github.com/brendangregg/bpf-perf-tools-book)
 		- [cloud native eBPF day](https://events.linuxfoundation.org/cloud-native-ebpf-day-europe/)
@@ -139,7 +141,7 @@
 
 
 
-# Tools
+# 速查表
 
 
 |Package|Provides|
@@ -163,7 +165,7 @@
 
 ## Dynamic Tracing Tools
 
-[Linux tracing tools](https://www.brendangregg.com/linuxperf.html) use the events interfaces (tracepoints, kprobes, uprobes, USDT) for advanced performance analysis.
+[Linux tracing tools](https://www.brendangregg.com/linuxperf.html) use the events interfaces (tracepoints, kprobes, uprobes, USDT) for advanced performance analysis and troubleshooting.
 
 
 |Type  | Linux Observability Sources|
@@ -219,9 +221,118 @@
 		- [brendangregg homepage](https://www.brendangregg.com/)
 
 
-## 火焰图
+## FlameGraph
 
 - FlameGraph: Stack trace visualizer
 	- [brendangregg/FlameGraph](https://github.com/brendangregg/FlameGraph)
 	- [Flame Graphs Examples](https://www.brendangregg.com/flamegraphs.html)
+
+
+
+
+
+# eBPF
+
+
+- eBPF tools and their visibility
+	- ![attachments/BPF_Performance_Tools_By_Brendangregg.png](attachments/BPF_Performance_Tools_By_Brendangregg.png)
+- The traditional tools used to examine these components are summarized in Table, along with whether BPF tracing can observe these components.
+	- ![attachments/Components_By_Traditional_Analysis_Tools_AlongWith_BPF_tracing.png](attachments/Components_By_Traditional_Analysis_Tools_AlongWith_BPF_tracing.png)
+- BPF Versus Kernel Modules
+	- kprobes and tracepoints have been available for many years, and they can be used from loadable kernel modules directly.
+	- benefits
+- What Are BCC, bpftrace, and IO Visor?
+	- ![attachments/bcc_bpftrace_and_BPF.png](attachments/bcc_bpftrace_and_BPF.png)
+
+## eBPF Illustrated
+
+- eBPF Illustrated: BPF tracing technologies 
+	- ![attachments/BPF_illustrated_BPF_tracing_technologies.png](attachments/BPF_illustrated_BPF_tracing_technologies.png)
+- Classic BPF Versus Extended BPF
+	- ![attachments/classic-BPF_versus_Extended-BPF.png](attachments/classic-BPF_versus_Extended-BPF.png)
+- eBPF runtime internals
+	- Show how BPF instructions pass the BPF verifier to be executed by a BPF virtual machine.
+		- ![attachments/BPF_illustrated_eBPF_runtime_internals.png](attachments/BPF_illustrated_eBPF_runtime_internals.png)
+	- The verifier rejects unsafe operations, including unbounded loops: BPF programs must finish in a bounded time.
+	- The BPF virtual machine implementation has both an interpreter and a JIT compiler: the JIT compiler generates native instructions for direct execution. 
+	- BPF can make use of helpers for fetching kernel state, and BPF maps for storage. 
+	- The BPF program is executed on events, which include kprobes, uprobes, and tracepoints.
+
+
+
+## eBPF Event Sources
+
+
+- eBPF event sources
+	- ![attachments/event_sources_eBPF_event_support.png](attachments/event_sources_eBPF_event_support.png)
+	- dynamic instrumentation
+		- `kprobes`: dynamic instrumentation for kernel functions  
+		- `uprobes`: dynamic instrumentation for user-level functions 
+		- Downsides
+			- `Interface Stability Issue`: functions can be renamed or removed from one software version to the next.
+			- Another issue is that compilers may inline functions as a compiler optimization, making them unavailable for instrumentation via kprobes or uprobes.
+	- static instrumentation
+		- `tracepoints`: kernel-level statically defined tracing  for kernel-level static instrumentation.
+		- `USDT`: user-level statically defined tracing for user-level static instrumentation.
+		- Downside: these static instrumentation points become a maintenance burden for the developers
+	- A recommended strategy 
+		- is to try using static tracing first (using tracepoints and USDT) 
+		- and then switch to dynamic tracing (using kprobes and uprobes) 
+		- when static tracing is unavailable.
+- sources
+	- kprobes
+	- uprobes
+	- Tracepoints
+	- USDT
+	- Dynamic USDT
+	- PMC
+	- perf_events
+
+
+
+
+
+
+## eBPF Programs
+
+
+
+
+
+- Writing BPF Programs
+	- ■ LLVM
+	- ■ BCC
+	- ■ bpftrace
+- Viewing BPF Instructions: bpftool
+	- tool for inspection and simple manipulation of eBPF programs and maps
+	- `man bpftool`
+	- `man bpf`
+	- `man bpf-helpers`
+	- `man bpftool-btf`
+	- `man bpftool-cgroup`
+	- `man bpftool-feature`
+	- `man bpftool-gen`
+	- `man bpftool-iter`
+	- `man bpftool-link`
+	- `man bpftool-map`
+	- `man bpftool-net`
+	- `man bpftool-perf`
+	- `man bpftool-prog`
+	- `man bpftool-struct_ops`
+- BPF API
+	- BPF Helper Functions
+		- linux source: `include/uapi/linux/bpf`
+		- `man bpf-helpers`: list of eBPF helper functions
+	- BPF Syscall Commands
+	- BPF Program Types
+	- BPF Map Types
+- BPF Concurrency Controls
+- BPF Type Format (BTF)
+- BPF CO-RE
+- BPF Limitations
+
+
+
+
+
 
