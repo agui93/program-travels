@@ -188,19 +188,19 @@ python3 tcpconnect
 
 
 
-# bpfstrace
+# bpftrace
 
 
 
-- iovisor/bpfstrace
+- iovisor/bpftrace
 	- [如何安装bpftrace-dbgsym](https://wiki.ubuntu.com/Debug%20Symbol%20Packages)
-	- [如何安装bpfstrace](https://installati.one/install-bpftrace-ubuntu-22-04/)
-	- [iovisor/bpfstrace](https://github.com/iovisor/bpftrace)
+	- [如何安装bpftrace](https://installati.one/install-bpftrace-ubuntu-22-04/)
+	- [iovisor/bpftrace](https://github.com/iovisor/bpftrace)
 	- [mainline: kernel-devel的兼容问题](https://www.linuxcapable.com/how-to-install-ubuntu-mainline-kernel-installer-on-ubuntu-linux/)
 
 
 
-## bpfstrace install
+## bpftrace install
 
 
 ```bash
@@ -209,7 +209,7 @@ python3 tcpconnect
 # 安装
 apt-get -y install bpftrace
 
-# 当需要删除bpfstrace
+# 当需要删除bpftrace
 # Uninstall bpftrace And Its Dependencies
 # apt-get -y autoremove bpftrace
 # Remove bpftrace Configurations and Data
@@ -228,7 +228,7 @@ apt-get update
 apt-get install bpftrace-dbgsym
 
 
-# 下载bpfstrace(基于0.14.1版本无兼容问题，更高版本的bpfstrace会出现兼容问题)
+# 下载bpftrace(基于0.14.1版本无兼容问题，更高版本的bpftrace会出现兼容问题)
 wget https://github.com/iovisor/bpftrace/archive/refs/tags/v0.14.1.tar.gz
 tar -zxvf v0.14.1.tar.gz
 cd bpftrace-0.14.1/tools/
@@ -262,7 +262,7 @@ mainline --list-installed
 ```
 
 
-## bpfstrace tools
+## bpftrace tools
 
 ![attachments/bpftrace_probes_2018.png](attachments/bpftrace_probes_2018.png)
 
@@ -307,7 +307,7 @@ bpftrace contains various tools, which also serve as examples of programming in 
 - tools/[writeback.bt](https://github.com/iovisor/bpftrace/blob/master/tools/writeback.bt): Trace file system writeback events with details. [Examples](https://github.com/iovisor/bpftrace/blob/master/tools/writeback_example.txt).
 - tools/[xfsdist.bt](https://github.com/iovisor/bpftrace/blob/master/tools/xfsdist.bt): Summarize XFS operation latency distribution as a histogram. [Examples](https://github.com/iovisor/bpftrace/blob/master/tools/xfsdist_example.txt).
 
-## bpfstrace one-liners
+## bpftrace one-liners
 ```bash
 # Files opened by process
 bpftrace -e 'tracepoint:syscalls:sys_enter_open { printf("%s %s\n", comm, str(args->filename)); }'
@@ -340,3 +340,20 @@ bpftrace -e 'profile:hz:99 /pid == 189/ { @[ustack] = count(); }'
 bpftrace -e 'tracepoint:syscalls:sys_enter_openat /cgroup == cgroupid("/sys/fs/cgroup/unified/mycg")/ { printf("%s\n", str(args->filename)); }'
 ```
 
+
+
+# bpftool
+
+
+[bpftool](https://github.com/libbpf/bpftool): tool for inspection and simple manipulation of eBPF programs and maps
+
+```bash
+# 安装bpftool
+apt install -y linux-tools-$(uname -r)
+```
+
+
+```bash
+bpftool prog help
+
+```
