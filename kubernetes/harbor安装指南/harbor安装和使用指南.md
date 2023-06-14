@@ -1,5 +1,8 @@
 
 
+
+
+
 # 安装虚拟机
 
 
@@ -77,6 +80,10 @@ ip route get 192.168.57.101
 # 验证
 ping -c1 192.168.57.254
 ping -c1 192.168.57.1
+
+# 关闭swap
+swapoff -a
+sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
 ```
 
 
@@ -84,13 +91,9 @@ ping -c1 192.168.57.1
 	- ![attachments/harbor_vm_ip_setting_after_netplan.png](attachments/harbor_vm_ip_setting_after_netplan.png)
 
 
-# 安装docker
+## 安装docker
 
 ```bash
-# 关闭swap
-swapoff -a
-sed -i '/ swap / s/^\(.*\)$/#\1/g' /etc/fstab
-
 # install docker
 apt install -y docker.io
 systemctl enable docker
@@ -125,6 +128,8 @@ systemctl restart docker
 systemctl status docker
 journalctl -xeu docker 
 journalctl -f -u docker
+
+# k8s容器运行时containerd (安装docker时containerd也被安装了)
 systemctl status containerd
 journalctl -xeu  containerd 
 journalctl -f -u containerd
@@ -153,120 +158,184 @@ docker rm -f test
 
 
 
+## 启用HTTPS
+```bash
+# 参考文档: https://goharbor.io/docs/2.8.0/install-config/configure-https/
+# 其中,本实验中 yourdomain.com: k8strials.harbor.com
+# 其中,本实验中 hostname: k8s-harbor
 
+mkdir /root/pre-certs
+cd /root/pre-certs
+
+# Generate a CA certificate private key.
+openssl genrsa -out ca.key 4096
+# Generate the CA certificate.
+openssl req -x509 -new -nodes -sha512 -days 3650 \
+ -subj "/C=CN/ST=Beijing/L=Beijing/O=example/OU=Personal/CN=k8strials.harbor.com" \
+ -key ca.key \
+ -out ca.crt
+
+# Generate a Server private key.
+openssl genrsa -out k8strials.harbor.com.key 4096
+# Generate a Server  certificate signing request (CSR).
+openssl req -sha512 -new \
+    -subj "/C=CN/ST=Beijing/L=Beijing/O=example/OU=Personal/CN=k8strials.harbor.com" \
+    -key k8strials.harbor.com.key \
+    -out k8strials.harbor.com.csr
+
+# Generate an x509 v3 extension file.
+cat > v3.ext <<-EOF
+authorityKeyIdentifier=keyid,issuer
+basicConstraints=CA:FALSE
+keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment
+extendedKeyUsage = serverAuth
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1=k8strials.harbor.com
+DNS.2=k8strials.harbor
+DNS.3=k8strials
+DNS.4=k8s-harbor
+EOF
+
+# Use the v3.ext file to generate a Server certificate for your Harbor host.
+openssl x509 -req -sha512 -days 3650 \
+    -extfile v3.ext \
+    -CA ca.crt -CAkey ca.key -CAcreateserial \
+    -in k8strials.harbor.com.csr \
+    -out k8strials.harbor.com.crt
+
+
+# Provide the Certificates to Harbor
+mkdir -p /data/cert/
+cp k8strials.harbor.com.crt /data/cert/
+cp k8strials.harbor.com.key /data/cert
+
+
+# Provide the Certificates to Docker
+mkdir -p /etc/docker/certs.d/k8strials.harbor.com/
+openssl x509 -inform PEM -in k8strials.harbor.com.crt -out k8strials.harbor.com.cert
+cp k8strials.harbor.com.cert /etc/docker/certs.d/k8strials.harbor.com/
+cp k8strials.harbor.com.key /etc/docker/certs.d/k8strials.harbor.com/
+cp ca.crt /etc/docker/certs.d/k8strials.harbor.com/
+systemctl restart docker
+```
+
+
+- 启用HTTPS涉及到的文件
+	- ![attachments/harbor_https_cert_prepared.png](attachments/harbor_https_cert_prepared.png)
+
+
+
+
+## 安装harbor
 ```bash
 # 下载
-wget https://github.com/goharbor/harbor/releases/download/v2.7.2/harbor-offline-installer-v2.7.2.tgz
+wget https://github.com/goharbor/harbor/releases/download/v2.8.2/harbor-offline-installer-v2.8.2.tgz
 
 # 解压
-tar -zxvf harbor-offline-installer-v2.7.2.tgz 
+tar -zxvf harbor-offline-installer-v2.8.2.tgz 
 cd harbor
 
 # 修改配置文件 
 cp harbor.yml.tmpl harbor.yml 
-# 修改harbor.yml: http.port调整为: 8888
-# 修改harbor.yml: hostname调整为:   
-# 注释:https related config
+# hostname: k8strials.harbor.com
+# https.certificate: /data/cert/k8strials.harbor.com.crt
+# https.private_key: /data/cert/k8strials.harbor.com.key
+diff harbor.yml harbor.yml.tmpl
+
+
+# 准备harbor 
+./prepare
 
 # 部署harbor 
 ./install.sh
 
 # 部署结果查看 
 docker ps -a
-# 浏览器打开: http://192.168.57.254:8888, 默认账号和密码: admin, Harbor12345
 
+# 本地浏览器无法解析域名: k8strials.harbor.com, 修改本地/etc/hosts
+echo "192.168.57.254 k8strials.harbor.com" >> /etc/hosts
+# 本地浏览器打开: k8strials.harbor.com, 默认账号和密码: admin, Harbor12345
 
-# 重启harbor(当前虚机重启后，需要重启harbor)
+# 如何重启harbor(当前虚机重启后，需要重启harbor)
 docker restart $(docker ps -a |grep goharbor|awk '{print $1}'  |xargs)
 ```
 
 
-- `harbor.yml`的配置
-	- ![attachments/habor_install_harbor_yml_updated.png](attachments/habor_install_harbor_yml_updated.png)
-- 部署结果
-	- ![attachments/harbor_install_result.png](attachments/harbor_install_result.png)
-- 浏览器预览
-	- ![attachments/harbor_install_chrome_view.png](attachments/harbor_install_chrome_view.png)
 
-
+- 安装harbor
+	- 配置的调整
+		- ![attachments/harbor_yml_config_diff.png](attachments/harbor_yml_config_diff.png)
+	- install的结果
+		- ![attachments/harbor_install_result.png](attachments/harbor_install_result.png)
+	- 浏览器预览
+		- ![attachments/harbor_install_view_by_browser.png](attachments/harbor_install_view_by_browser.png)
 
 
 # 使用harbor
 
+基于docker使用harbor
 
 ```bash
-# docker配置中/etc/docker/daemon.json添加: insecure-registries
-tee /etc/docker/daemon.json <<EOF
-{
-    "exec-opts":[
-        "native.cgroupdriver=systemd"
-    ],
-    "log-driver":"json-file",
-    "log-opts":{
-        "max-size":"100m"
-    },
-    "storage-driver":"overlay2",
-    "registry-mirrors":[
-        "https://b9pmyelo.mirror.aliyuncs.com",
-        "https://registry.docker-cn.com",
-        "http://hub-mirror.c.163.com",
-        "https://docker.mirrors.ustc.edu.cn"
-    ],
-    "insecure-registries":[
-        "192.168.57.254:8888"
-    ]
-}
-EOF
+# 虚拟机上
+echo "192.168.57.254 k8strials.harbor.com" >> /etc/hosts
 
-# 重启docker
-systemctl daemon-reload
-systemctl restart docker
-systemctl status docker
+# 准备镜像
+docker pull nginx:1.19
+docker tag nginx:1.19 k8strials.harbor.com/library/nginx:1.19
+
+# docker login: admin Harbor12345
+docker login k8strials.harbor.com
 
 
-# 重启harbor
-docker restart $(docker ps -a |grep goharbor|awk '{print $1}'  |xargs)
+
+# push镜像到harbor
+docker push k8strials.harbor.com/library/nginx:1.19
 ```
 
 
+- 基于docker使用harbor
+	- 登录和push
+		- ![attachments/docker_login_harbor_and_push.png](attachments/docker_login_harbor_and_push.png)
+	- 浏览器查看push结果
+		- ![attachments/docker_push_harbor_viewed_by_browser.png](attachments/docker_push_harbor_viewed_by_browser.png)
 
+
+基于containerd使用harbor
 ```bash
-# 拉取nginx镜像 
-docker pull nginx:1.19
+# 拉取镜像(拉取失败: 无权限)
+ctr images pull k8strials.harbor.com/library/nginx:1.19
 
-# tag镜像
-docker tag nginx:1.19 192.168.57.254:8888/library/nginx:1.19
-
-# docker登录
-docker login 192.168.57.254:8888
-
-# 推送到harbor中
-docker push 192.168.57.254:8888/library/nginx:1.19
-
-# 浏览器中查看: http://192.168.57.254:8888
-
-# 本地删除自定义的镜像
-docker rmi 192.168.57.254:8888/library/nginx:1.19
+# 导入harbor的证书
+cp /root/pre-certs/k8strials.harbor.com.crt /usr/local/share/ca-certificates/
+/usr/sbin/update-ca-certificates
 
 # 拉取镜像
-docker pull 192.168.57.254:8888/library/nginx:1.19
-docker images
+ctr images pull k8strials.harbor.com/library/nginx:1.19
 
-# 测试
-docker run -d -p 80:80 -p 443:443 --name nginx-test 192.168.57.254:8888/library/nginx:1.19
-
-# 浏览器中查看: http://192.168.57.254:80
-
-# 删除测试容器
-docker rm -f nginx-test
+# 查看拉取的镜像
+ctr images list -q
+ctr images list 
 ```
 
-- push镜像到harbor
-	- ![attachments/harbor_usage_push_image.png](attachments/harbor_usage_push_image.png)
-	- ![attachments/harbor_usage_view_push_image.png](attachments/harbor_usage_view_push_image.png)
-- 从harbor中pull镜像
-	- ![attachments/harbor_usage_pull_image.png](attachments/harbor_usage_pull_image.png)
-	- ![attachments/harbor_usage_view_pull_image.png](attachments/harbor_usage_view_pull_image.png)
-- 测试harbor镜像
-	- ![attachments/harbor_usage_test_nginx_image.png](attachments/harbor_usage_test_nginx_image.png)
-	- ![attachments/harbor_usage_view_test_nginx_image.png](attachments/harbor_usage_view_test_nginx_image.png)
+- 基于containerd使用harbor
+	- 使用containerd拉取镜像
+		- ![attachments/containerd_pull_from_harbor.png](attachments/containerd_pull_from_harbor.png)
+	- containerd使用registry的权限认证
+		- 不同版本的containerd的权限认证使用的配置方式不同
+		- 网上的配置资料比较混乱，新版本的containerd很可能无法使用
+		- 这个是本次实验中最大的坑
+		- 建议: 官方文档 + 实验
+
+
+
+# 参考资料
+
+
+- [harbor configure https](https://goharbor.io/docs/2.8.0/install-config/configure-https/)
+- [harbor troubleshoot](https://goharbor.io/docs/2.8.0/install-config/troubleshoot-installation/)
+- [harbor configure](https://goharbor.io/docs/2.8.0/install-config/configure-system-settings-cli/)
+- [containerd docs](https://github.com/containerd/containerd/tree/main/docs)
+- [containerd cert](https://stackoverflow.com/questions/73415766/how-to-skip-tls-cert-check-for-crictl-containerd-cr-while-pulling-the-images-f)
+- [containerd hosts config](https://github.com/containerd/containerd/blob/main/docs/hosts.md)
