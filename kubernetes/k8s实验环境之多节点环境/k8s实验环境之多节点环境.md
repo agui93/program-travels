@@ -460,7 +460,7 @@ kubectl logs -f
 
 - 查看join命令
 	- 在`k8svm01`节点上，查看安装日志，有join提示命令
-	- ![[attachments/k3s_master_log_kubeadm_join.png]]
+	- ![attachments/k3s_master_log_kubeadm_join.png](attachments/k3s_master_log_kubeadm_join.png)
 - 部署操作: 在节点`k8svm02`和`k8svm03`上分别执行以下步骤
 	- 从私有镜像中心拉取镜像，本操作和master节点上操作一样
 	- 执行join命令
