@@ -31,3 +31,4 @@
 
 # kubernetes
 - [harbor安装和使用指南](kubernetes/harbor安装和使用指南/harbor安装和使用指南.md)
+- [k8s实验环境之单节点环境](kubernetes/k8s实验环境之单节点环境/k8s实验环境之单节点环境.md)

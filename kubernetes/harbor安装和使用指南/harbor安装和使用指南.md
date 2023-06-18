@@ -150,8 +150,8 @@ docker rm -f test
 ```
 
 - docker安装验证
-	- ![[attachments/docker_installed_docker_status.png]]
-	- ![[attachments/docker_installed_docker_container_test.png]]
+	- ![attachments/docker_installed_docker_status.png](attachments/docker_installed_docker_status.png)
+	- ![attachments/docker_installed_docker_container_test.png](attachments/docker_installed_docker_container_test.png)
 
 
 # 部署harbor
