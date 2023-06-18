@@ -30,6 +30,7 @@
 
 
 # kubernetes
+- [k8s内部机制](kubernetes/k8s-internals/k8s-internals.md)
 - [harbor安装和使用指南](kubernetes/harbor安装和使用指南/harbor安装和使用指南.md)
 - [k8s实验环境之单节点环境](kubernetes/k8s实验环境之单节点环境/k8s实验环境之单节点环境.md)
 - [k8s实验环境之多节点环境](kubernetes/k8s实验环境之多节点环境/k8s实验环境之多节点环境.md)
