@@ -30,4 +30,4 @@
 
 
 # kubernetes
-- [harbor安装指南](kubernetes/harbor安装指南/harbor安装和使用指南.md)
+- [harbor安装和使用指南](kubernetes/harbor安装和使用指南/harbor安装和使用指南.md)

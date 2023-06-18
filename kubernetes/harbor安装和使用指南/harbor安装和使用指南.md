@@ -275,7 +275,7 @@ docker restart $(docker ps -a |grep goharbor|awk '{print $1}'  |xargs)
 
 # 使用harbor
 
-基于docker使用harbor
+## 基于docker使用harbor
 
 ```bash
 # 虚拟机上
@@ -287,8 +287,6 @@ docker tag nginx:1.19 k8strials.harbor.com/library/nginx:1.19
 
 # docker login: admin Harbor12345
 docker login k8strials.harbor.com
-
-
 
 # push镜像到harbor
 docker push k8strials.harbor.com/library/nginx:1.19
@@ -302,7 +300,7 @@ docker push k8strials.harbor.com/library/nginx:1.19
 		- ![attachments/docker_push_harbor_viewed_by_browser.png](attachments/docker_push_harbor_viewed_by_browser.png)
 
 
-基于containerd使用harbor
+## 基于ctr工具使用harbor
 ```bash
 # 拉取镜像(拉取失败: 无权限)
 ctr images pull k8strials.harbor.com/library/nginx:1.19
@@ -319,6 +317,13 @@ ctr images list -q
 ctr images list 
 ```
 
+
+```bash
+# 不使用证书进行pull和push
+ctr images pull k8strials.harbor.com/library/nginx:1.19 -k
+ctr images push k8strials.harbor.com/library/nginx:1.19  -k --user admin:Harbor12345 --platform linux/amd64
+```
+
 - 基于containerd使用harbor
 	- 使用containerd拉取镜像
 		- ![attachments/containerd_pull_from_harbor.png](attachments/containerd_pull_from_harbor.png)
@@ -329,6 +334,95 @@ ctr images list
 		- 建议: 官方文档 + 实验
 
 
+
+
+
+
+
+
+# k8s(v1.27.0)使用的镜像
+
+
+## kube flannel
+```bash
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull docker.io/flannel/flannel-cni-plugin:v1.1.2 
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag docker.io/flannel/flannel-cni-plugin:v1.1.2   k8strials.harbor.com/docker.io/flannel/flannel-cni-plugin:v1.1.2 
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io  images push k8strials.harbor.com/docker.io/flannel/flannel-cni-plugin:v1.1.2 -k  --platform linux/amd64 --user admin:Harbor12345
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull k8strials.harbor.com/docker.io/flannel/flannel-cni-plugin:v1.1.2 -k
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull docker.io/flannel/flannel:v0.21.4
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag docker.io/flannel/flannel:v0.21.4   k8strials.harbor.com/docker.io/flannel/flannel:v0.21.4
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io  images push k8strials.harbor.com/docker.io/flannel/flannel:v0.21.4 -k --user admin:Harbor12345 --platform linux/amd64
+
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull k8strials.harbor.com/docker.io/flannel/flannel:v0.21.4 -k
+```
+
+![attachments/harbor_k8s_kube_flannel_browers.png](attachments/harbor_k8s_kube_flannel_browers.png)
+
+## google containers
+
+
+
+使用`aliyuncs`的源，把镜像pull到本地
+```bash
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/kube-apiserver:v1.27.0 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/kube-controller-manager:v1.27.0 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/kube-scheduler:v1.27.0 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/kube-proxy:v1.27.0 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/pause:3.9 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/pause:3.6 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/etcd:3.5.7-0 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images pull registry.aliyuncs.com/google_containers/coredns:v1.10.1 
+```
+
+![attachments/harbor_k8s_google_containers_pull2local.png](attachments/harbor_k8s_google_containers_pull2local.png)
+
+本地把镜像重新tag
+```bash
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/kube-apiserver:v1.27.0  k8strials.harbor.com/google_containers/kube-apiserver:v1.27.0 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/kube-controller-manager:v1.27.0  k8strials.harbor.com/google_containers/kube-controller-manager:v1.27.0
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/kube-scheduler:v1.27.0  k8strials.harbor.com/google_containers/kube-scheduler:v1.27.0
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/kube-proxy:v1.27.0  k8strials.harbor.com/google_containers/kube-proxy:v1.27.0
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/pause:3.9  k8strials.harbor.com/google_containers/pause:3.9 
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/pause:3.6  k8strials.harbor.com/google_containers/pause:3.6  
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/etcd:3.5.7-0  k8strials.harbor.com/google_containers/etcd:3.5.7-0
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images tag registry.aliyuncs.com/google_containers/coredns:v1.10.1  k8strials.harbor.com/google_containers/coredns:v1.10.1  
+```
+![attachments/harbor_k8s_google_containers_tag_local.png](attachments/harbor_k8s_google_containers_tag_local.png)
+把本地把镜像push到harbor
+```bash
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/kube-apiserver:v1.27.0 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/kube-controller-manager:v1.27.0 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/kube-scheduler:v1.27.0 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/kube-proxy:v1.27.0 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/pause:3.9 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/pause:3.6 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/etcd:3.5.7-0 -k --user admin:Harbor12345 --platform linux/amd64
+ctr --address /var/run/containerd/containerd.sock -n k8s.io images push k8strials.harbor.com/google_containers/coredns:v1.10.1 -k --user admin:Harbor12345 --platform linux/amd64
+```
+
+![attachments/harbor_k8s_google_containers_push2harbor.png](attachments/harbor_k8s_google_containers_push2harbor.png)
+
+从harbor拉取镜像(放到nampespace: default中)
+
+```bash
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/kube-apiserver:v1.27.0 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/kube-controller-manager:v1.27.0 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/kube-scheduler:v1.27.0 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/kube-proxy:v1.27.0 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/pause:3.9 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/pause:3.6 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/etcd:3.5.7-0 -k
+ctr --address /var/run/containerd/containerd.sock -n default images pull k8strials.harbor.com/google_containers/coredns:v1.10.1 -k
+```
+
+
+![attachments/harbor_k8s_google_containers_pull2local_from_harbor.png](attachments/harbor_k8s_google_containers_pull2local_from_harbor.png)
 
 # 参考资料
 
