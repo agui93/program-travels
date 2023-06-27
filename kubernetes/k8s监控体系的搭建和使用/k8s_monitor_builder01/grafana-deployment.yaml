@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: grafana
+  template:
+    metadata:
+      labels:
+        app: grafana
+    spec:
+      containers:
+      - name: grafana
+        image: k8strials.harbor.com/monitoring/grafana:9.1.3
+        ports:
+        - containerPort: 3000
+        env:
+        - name: GF_AUTH_ANONYMOUS_ENABLED
+          value: "true"
+        volumeMounts:
+        - name: grafana-secret
+          mountPath: /etc/grafana/secrets
+          readOnly: true
+        - mountPath: /etc/grafana/provisioning/datasources
+          name: grafana-datasources
+        - mountPath: /var/lib/grafana
+          name: grafana-data
+      volumes:
+      - name: grafana-secret
+        secret:
+          secretName: grafana-secret
+      - configMap:
+          defaultMode: 420
+          name: grafana-datasources
+        name: grafana-datasources
+      - name: grafana-data
+        persistentVolumeClaim:
+          claimName: grafana-pv-claim
+

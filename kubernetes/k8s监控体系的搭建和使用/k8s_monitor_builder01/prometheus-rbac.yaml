@@ -1,0 +1,75 @@
+# Kubernetes Role-Based Access Control (RBAC) 是 Kubernetes 集群中用于授权的一种机制，可以定义不同用户或服务账户的访问权限
+#   RBAC 将访问权限分为两个层次：角色（Role）和角色绑定（RoleBinding）。
+#     角色用于定义一组权限，而角色绑定用于将一组用户或服务账户与角色关联起来，从而授权这些用户或服务账户访问这个角色所定义的资源和操作。
+#   Kubernetes 集群中还有一种更高级别的授权机制，叫做 ClusterRole 和 ClusterRoleBinding。
+#     与 Role 和 RoleBinding 不同的是，ClusterRole 和 ClusterRoleBinding 可以对整个集群进行授权，而不仅仅是某个命名空间内的资源。
+#   总之，Kubernetes 的 RBAC 机制是通过定义角色和角色绑定，以及集群级别的 ClusterRole 和 ClusterRoleBinding，来实现对 Kubernetes 集群中的资源和操作进行授权管理的
+# 该YAML 配置文件定义了:
+#   一个名为 "monitoring" 的 Kubernetes 命名空间，
+#   在该命名空间下定义了一个名为 "prometheus" 的服务帐户（ServiceAccount）。
+#   还创建了一个名为 "prometheus" 的 ClusterRole 和对应的 ClusterRoleBinding
+#   其中，ClusterRole定义了允许"prometheus"服务帐户执行的操作，ClusterRoleBinding 将服务帐户与ClusterRole关联起来，确保它可以使用那些权限。
+#   权限情况:
+#     对节点（nodes）、节点代理（nodes/proxy）、节点指标（nodes/metrics）、服务（services）、端点（endpoints）和 Pod（pods）进行 "get"、"list" 和 "watch" 操作的权限。
+#     对 ConfigMap 资源进行 "get" 操作的权限。
+#     对 "/metrics" 这个非资源 URL 进行 "get" 操作的权限。
+# 如何使用:
+#   创建: kubectl apply -f prometheus-rbac.yaml
+#   删除: kubectl delete -f prometheus-rbac.yaml 
+#   验证: kubectl get -f prometheus-rbac.yaml -o wide
+#   验证权限: kubectl auth can-i <verb> <resource> --as=system:serviceaccount:<namespace>:<service-account> 
+#             kubectl auth can-i get nodes --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get nodes/proxy --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get nodes/metrics --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get services   --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get endpoints  --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get pods       --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get configmaps --as=system:serviceaccount:monitoring:prometheus
+#             kubectl auth can-i get /metrics --as=system:serviceaccount:monitoring:prometheus
+#  
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: monitoring
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: prometheus
+  namespace: monitoring
+rules:
+- apiGroups: [""]
+  resources:
+  - nodes
+  - nodes/proxy
+  - nodes/metrics
+  - services
+  - endpoints
+  - pods
+  verbs: ["get", "list", "watch"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get"]
+- nonResourceURLs: ["/metrics"]
+  verbs: ["get"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: monitoring
+roleRef:
+  kind: ClusterRole
+  name: prometheus
+  apiGroup: rbac.authorization.k8s.io
+

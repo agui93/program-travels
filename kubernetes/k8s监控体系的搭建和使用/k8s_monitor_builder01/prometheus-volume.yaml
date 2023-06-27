@@ -1,0 +1,38 @@
+# 该 YAML 配置文件，在命名空间:monitoring，定义了:
+#   一个名为 "prometheus-pv-volume" 的 本地存储类型的 PersistentVolume（持久化卷），并为其提供了 6GB 的存储容量。
+#       持久化卷通过 HostPath 将底层主机上的 "/mnt/prometheus-pv-data" 路径作为存储位置。
+#       此配置适用于将该持久化卷与 Prometheus 监控相关的应用程序或资源关联，并使其能够持久性地存储数据
+#   一个名为 "prometheus-pv-claim" 的持久化卷声明，并指定了与 "prometheus-pv-volume" 相同的存储类、访问模式和一部分容量
+# 使用:
+#   创建: kubectl apply  -f prometheus-volume.yaml
+#   删除: kubectl delete -f prometheus-volume.yaml
+#   验证: kubectl get    -f prometheus-volume.yaml
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: prometheus-pv-volume
+  namespace: monitoring
+  labels:
+    type: local
+spec:
+  storageClassName: local-storage
+  capacity:
+    storage: 6Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/prometheus-pv-data"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: prometheus-pv-claim
+  namespace: monitoring
+spec:
+  storageClassName: local-storage
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 4Gi
