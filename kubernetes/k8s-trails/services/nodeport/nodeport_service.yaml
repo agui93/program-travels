@@ -1,0 +1,64 @@
+###################################################
+# kubectl apply    -f nodeport_service.yaml
+# kubectl get      -f nodeport_service.yaml -o wide
+# kubectl describe -f nodeport_service.yaml
+# kubectl get pods -n nodeport-service -o wide
+# kubectl delete   -f nodeport_service.yaml
+# 验证: 
+#   通过ClusterIp内部访问
+#     nc -vz $(kubectl get svc tomcat-service -n nodeport-service -o jsonpath='{.spec.clusterIP}') 8080
+#     curl $(kubectl get svc tomcat-service -n nodeport-service -o jsonpath='{.spec.clusterIP}'):8080
+#   宿主机上访问
+#     nc -vz 127.0.0.1 30080
+#     nc -vz 宿主机IP  30080
+#   在浏览器上访问:
+#     http://{{ 宿主IP }}:30080/
+###################################################
+#   NodePort:
+#       NodePort 类型在 ClusterIP 的基础上扩展，为 Service 在每个节点上公开一个静态端口。
+#       流量通过选择的端口转发到相应的 Service。这允许从集群外部通过节点的 IP 地址和相应的 NodePort 访问 Service。
+###################################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: nodeport-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat-service
+  namespace: nodeport-service
+spec:
+  selector:
+    app: tomcat
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+      nodePort: 30080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-deployment
+  namespace: nodeport-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tomcat
+  template:
+    metadata:
+      labels:
+        app: tomcat
+    spec:
+      containers:
+        - name: tomcat
+          image: k8strials.harbor.com/library/tomcat:9.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---

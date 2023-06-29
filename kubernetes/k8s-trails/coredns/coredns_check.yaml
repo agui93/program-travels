@@ -1,0 +1,105 @@
+########################################################
+#  k8s中的kube-dns:
+#      kubectl get service/kube-dns -n kube-system -o yaml
+#      kubectl get deployment.apps/coredns -n kube-system -o yaml
+#      kubectl get configmaps coredns -n kube-system -o yaml  
+#      kubectl get pods -l k8s-app=kube-dns -n kube-system -o wide
+#      kubectl get -n kube-system pods/$(kubectl get pods -l k8s-app=kube-dns -n kube-system -o jsonpath='{.items[0].metadata.name}') -o yaml
+########################################################
+#  kubectl apply -f coredns_check.yaml 
+#  kubectl get -f coredns_check.yaml 
+#  kubectl exec -it ubuntu-pod -n coredns-check -- bash
+#    dns验证:
+#      nslookup tomcat-service
+#      dig tomcat-service.coredns-check.svc.cluster.local
+#  kubectl exec -it busybox-pod -n coredns-check -- sh
+#    查看(确认基础了宿主机的dns配置): 
+#      cat /etc/resolv.conf 
+########################################################
+#  在集群内需要能够通过服务名对服务进行访问, 目前kube-dns使用的是CoreDNS
+#  CoreDNS 架构在 Kubernetes 中提供了灵活且可扩展的 DNS 解析服务。
+#  它能够帮助应用程序和服务在 Kubernetes 集群内进行互相发现，并通过域名进行通信，简化了集群内部的服务间通信和名称解析的管理
+#  其中, Kubernetes 的 kubelet 组件将所有 DNS 查询转发到 CoreDNS 的 Service IP 上的指定端口
+#       /var/lib/kubelet/config.yaml配置中的字段: clusterDNS clusterDomain
+########################################################
+#  CoreDNS的主要功能是通过插件系统实现的。CoreDNS实现了一种链式插件结构，将DNS的逻辑抽象成了一个个插件，能够灵活组合使用
+#  查看CoreDNS的配置: kubectl get configmaps coredns -n kube-system -o yaml  
+#     配置说明: 查看coredns文档
+########################################################
+#  Kubernetes 中常见的 DNS 策略：
+#    ClusterFirst:
+#      优先使用Kubernetes环境的DNS服务（如CoreDNS提供的域名解析服务），将无法解析的域名转发到从宿主机继承的DNS服务器
+#    Default:
+#      继承Pod所在宿主机的DNS设置
+#    None:
+#      忽略Kubernetes环境的DNS配置，通过spec.dnsConfig自定义DNS配置
+#    External:
+########################################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: coredns-check
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ubuntu-pod
+  namespace: coredns-check
+spec:
+  containers:
+    - name: ubuntu-pod
+      image: k8strials.harbor.com/library/ubuntu-net-base:01
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "while true; do sleep 3600; done"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat-service
+  namespace: coredns-check
+spec:
+  selector:
+    app: tomcat
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-deploy
+  namespace: coredns-check
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tomcat
+  template:
+    metadata:
+      labels:
+        app: tomcat
+    spec:
+      containers:
+        - name: tomcat
+          image: k8strials.harbor.com/library/tomcat:9.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox-pod
+  namespace: coredns-check
+spec:
+  dnsPolicy: Default
+  containers:
+    - name: busybox
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "while true; do sleep 3600; done"]
+---

@@ -1,0 +1,86 @@
+##########################################################################################
+# kubectl apply -f multi_port_service.yaml
+# kubectl get   -f multi_port_service.yaml
+# kubectl get pods -n multi-port-service -o wide
+# kubectl delete -f multi_port_service.yaml
+# 验证:
+#    nc -vz  $(kubectl get service/multi-port-service  -n multi-port-service -o jsonpath='{.spec.clusterIP}') 30007
+#    nc -vz  $(kubectl get service/multi-port-service  -n multi-port-service -o jsonpath='{.spec.clusterIP}') 30009
+#    nc -vzu $(kubectl get service/multi-port-service  -n multi-port-service -o jsonpath='{.spec.clusterIP}') 30009 
+#    nc -vz  $(kubectl get service/multi-port-service  -n multi-port-service -o jsonpath='{.spec.clusterIP}') 30013
+#    nc -vz  $(kubectl get service/multi-port-service  -n multi-port-service -o jsonpath='{.spec.clusterIP}') 30037
+##########################################################################################
+#
+# 多端口服务指的是在同一个服务中监听多个端口。这种配置通常用于实现某个服务的多个实例或不同的功能
+# 
+##########################################################################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: multi-port-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: multi-port-service
+  namespace: multi-port-service
+spec:
+  selector:
+    app: openbsd-inetd
+  ports:
+    - name: echo
+      protocol: TCP
+      port: 30007
+      targetPort: 7
+    - name: discard-tcp
+      protocol: TCP
+      port: 30009
+      targetPort: 9
+    - name: discard-udp
+      protocol: UDP
+      port: 30019
+      targetPort: 9
+    - name: daytime
+      protocol: TCP
+      port: 30013
+      targetPort: 13
+    - name: time
+      protocol: TCP
+      port: 30037
+      targetPort: 37
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openbsd-inetd
+  namespace: multi-port-service
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: openbsd-inetd
+  template:
+    metadata:
+      labels:
+        app: openbsd-inetd
+    spec:
+      containers:
+        - name: openbsd-inetd
+          image: k8strials.harbor.com/library/ubuntu-net-base:01
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "-c", "/etc/init.d/openbsd-inetd start; while true; do sleep 3600; done"]
+          ports:
+            # 7/tcp: ECHO协议，用于回显测试
+            - containerPort: 7
+              protocol: TCP
+            # 9/tcp、9/udp：Discard协议，用于丢弃接收到的数据
+            - containerPort: 9
+              protocol: TCP
+            # 13/tcp：Daytime协议，用于获取服务器当前日期和时间
+            - containerPort: 13
+              protocol: TCP
+            # 37/tcp：TIME协议，用于获取服务器当前时间
+            - containerPort: 37
+              protocol: TCP
+---

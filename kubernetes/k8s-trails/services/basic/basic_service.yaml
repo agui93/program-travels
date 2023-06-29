@@ -1,0 +1,81 @@
+###################################################
+# Kubernetes Service的基本用法
+# 通过Service，Kubernetes实现了一种分布式应用统一入口的定义和负载均衡机制
+###################################################
+# kubectl apply    -f basic_service.yaml
+# kubectl get      -f basic_service.yaml -o wide
+# kubectl describe -f basic_service.yaml
+# kubectl get pods -n basic-service -o wide
+# 验证: 
+#     nc -vz $(kubectl get svc tomcat-service -n basic-service -o jsonpath='{.spec.clusterIP}') 8080
+#     curl $(kubectl get svc tomcat-service -n basic-service -o jsonpath='{.spec.clusterIP}'):8080
+# kubectl delete   -f basic_service.yaml
+###################################################
+# Kubernetes Service 的分发策略由 Service 类型 (spec.type) 决定。以下是几种常见的 Service 分发策略：
+#     ClusterIP:（默认）
+#         这是最常见的 Service 类型。它为Service 创建一个虚拟 IP（ClusterIP），仅在集群内部可访问。
+#         请求将基于负载均衡算法（通常为轮询）分发到后端 Pod。这是默认的分发策略，如果未指定 spec.type，则会使用 ClusterIP。
+#     NodePort: (允许集群外部访问)
+#         NodePort 类型在 ClusterIP 的基础上扩展，为 Service 在每个节点上公开一个静态端口。
+#         流量通过选择的端口转发到相应的 Service。这允许从集群外部通过节点的 IP 地址和相应的 NodePort 访问 Service。
+#     LoadBalancer: (允许集群外部访问)
+#         LoadBalancer 类型通过云提供商的负载均衡器（例如 AWS ELB、Google Cloud L7 LB）将流量分发到 Service。
+#         这需要云提供商支持，并为 Service 创建一个外部负载均衡器。
+#     ExternalName: (集群内部访问集群外部), 或者 (也可以结合Service与Endpoints, Endpoints设置外部Ip)
+#         ExternalName 类型允许将 Service 映射到集群外部的 CNAME 记录或其他外部域名。
+#         它不提供负载均衡功能，而只是提供了一个别名，指向指定的外部域名
+#     一些特殊的 Service 类型: 每种类型具有不同的应用场景和特性，可以根据需求选择适当的 Service 类型来实现所需的分发策略
+#         如 Headless Service、ExternalIP 等。
+#         Headless:
+#             Headless Service为每个Pod提供单独的DNS条目
+#             适用于一些需要直接与每个Pod进行通信的场景，如数据库复制集群、分布式缓存等
+#         ExternalIP: 访问集群外部
+# Service 内部的负载分发策略:
+#    Round Robin（默认）：这是最常见的负载均衡策略。每个请求按顺序轮流发送到后端 Pod
+#    SessionAffinity：SessionAffinity 策略基于客户端 IP 地址将多个请求路由到同一个后端 Pod。这样可以确保来自同一客户端的请求被发送到相同的 Pod 上，有助于维护会话状态。
+#        None：没有会话保持，每个请求都可以被分发到不同的后端 Pod。
+#        ClientIP：根据客户端 IP 地址进行会话保持，将具有相同客户端 IP 的请求发送到同一个后端 Pod。
+###################################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: basic-service
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tomcat-service
+  namespace: basic-service
+spec:
+  selector:
+    app: tomcat
+  type: ClusterIP
+  ports:
+    - protocol: TCP
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tomcat-rc
+  namespace: basic-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tomcat
+  template:
+    metadata:
+      labels:
+        app: tomcat
+    spec:
+      containers:
+        - name: tomcat
+          image: k8strials.harbor.com/library/tomcat:9.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              protocol: TCP
+---
