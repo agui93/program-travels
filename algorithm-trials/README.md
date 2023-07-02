@@ -30,10 +30,10 @@ Algorithms
 | [移动零](https://leetcode.cn/problems/move-zeroes/) | [todo](./questions/move-zeroes/solution.go) | |
 | [合并两个有序链表](https://leetcode.cn/problems/merge-two-sorted-lists/) | [todo](./questions/merge-two-sorted-lists/solution.go) | |
 | [合并K个升序链表](https://leetcode.cn/problems/merge-k-sorted-lists/) | [todo](./questions/merge-k-sorted-lists/solution.go) | |
-| [环形链表](https://leetcode.cn/problems/linked-list-cycle/) | [todo](./questions/linked-list-cycle/solution.go) | |
-| [环形链表 II](https://leetcode.cn/problems/linked-list-cycle-ii/) | [todo](./questions/linked-list-cycle-ii/solution.go) | |
-| [链表的中间结点](https://leetcode.cn/problems/middle-of-the-linked-list/) | [todo](./questions/middle-of-the-linked-list/solution.go) | |
-| [相交链表](https://leetcode.cn/problems/intersection-of-two-linked-lists/) | [todo](./questions/intersection-of-two-linked-lists/solution.go) | |
+| [环形链表](https://leetcode.cn/problems/linked-list-cycle/) | [solution](./questions/linked-list-cycle/solution.go) | |
+| [环形链表 II](https://leetcode.cn/problems/linked-list-cycle-ii/) | [solution](./questions/linked-list-cycle-ii/solution.go) | |
+| [链表的中间结点](https://leetcode.cn/problems/middle-of-the-linked-list/) | [solution](./questions/middle-of-the-linked-list/solution.go) | |
+| [相交链表](https://leetcode.cn/problems/intersection-of-two-linked-lists/) | [solution](./questions/intersection-of-two-linked-lists/solution.go) | |
 | [删除链表的倒数第 N 个结点](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/) | [solution](./questions/remove-nth-node-from-end-of-list/solution.go) | |
 | [用栈实现队列](https://leetcode.cn/problems/implement-queue-using-stacks/) | [todo](./questions//solution.go) | |
 | [用队列实现栈](https://leetcode.cn/problems/implement-stack-using-queues/) | [todo](./questions//solution.go) | |
