@@ -26,15 +26,15 @@ Algorithms
 | [优势洗牌](https://leetcode.cn/problems/advantage-shuffle/) | [todo](./questions/advantage-shuffle/solution.go) | |
 | [删除有序数组中的重复项](https://leetcode.cn/problems/remove-duplicates-from-sorted-array/) | [todo](./questions/remove-duplicates-from-sorted-array/solution.go) | |
 | [删除排序链表中的重复元素](https://leetcode.cn/problems/remove-duplicates-from-sorted-list/) | [todo](./questions/remove-duplicates-from-sorted-list/solution.go) | |
-| [移除元素](https://leetcode.cn/problems/remove-element/) | [todo](./questions//solution.go) | |
-| [移动零](https://leetcode.cn/problems/move-zeroes/) | [todo](./questions//solution.go) | |
-| [合并两个有序链表](https://leetcode.cn/problems/merge-two-sorted-lists/) | [todo](./questions//solution.go) | |
-| [合并K个升序链表](https://leetcode.cn/problems/merge-k-sorted-lists/) | [todo](./questions//solution.go) | |
-| [环形链表](https://leetcode.cn/problems/linked-list-cycle/) | [todo](./questions//solution.go) | |
-| [环形链表 II](https://leetcode.cn/problems/linked-list-cycle-ii/) | [todo](./questions//solution.go) | |
-| [链表的中间结点](https://leetcode.cn/problems/middle-of-the-linked-list/) | [todo](./questions//solution.go) | |
-| [相交链表](https://leetcode.cn/problems/intersection-of-two-linked-lists/) | [todo](./questions//solution.go) | |
-| [删除链表的倒数第 N 个结点](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/) | [todo](./questions//solution.go) | |
+| [移除元素](https://leetcode.cn/problems/remove-element/) | [todo](./questions/remove-element/solution.go) | |
+| [移动零](https://leetcode.cn/problems/move-zeroes/) | [todo](./questions/move-zeroes/solution.go) | |
+| [合并两个有序链表](https://leetcode.cn/problems/merge-two-sorted-lists/) | [todo](./questions/merge-two-sorted-lists/solution.go) | |
+| [合并K个升序链表](https://leetcode.cn/problems/merge-k-sorted-lists/) | [todo](./questions/merge-k-sorted-lists/solution.go) | |
+| [环形链表](https://leetcode.cn/problems/linked-list-cycle/) | [todo](./questions/linked-list-cycle/solution.go) | |
+| [环形链表 II](https://leetcode.cn/problems/linked-list-cycle-ii/) | [todo](./questions/linked-list-cycle-ii/solution.go) | |
+| [链表的中间结点](https://leetcode.cn/problems/middle-of-the-linked-list/) | [todo](./questions/middle-of-the-linked-list/solution.go) | |
+| [相交链表](https://leetcode.cn/problems/intersection-of-two-linked-lists/) | [todo](./questions/intersection-of-two-linked-lists/solution.go) | |
+| [删除链表的倒数第 N 个结点](https://leetcode.cn/problems/remove-nth-node-from-end-of-list/) | [solution](./questions/remove-nth-node-from-end-of-list/solution.go) | |
 | [用栈实现队列](https://leetcode.cn/problems/implement-queue-using-stacks/) | [todo](./questions//solution.go) | |
 | [用队列实现栈](https://leetcode.cn/problems/implement-stack-using-queues/) | [todo](./questions//solution.go) | |
 | [有效的括号](https://leetcode.cn/problems/valid-parentheses/) | [todo](./questions//solution.go) | |
