@@ -1,0 +1,7 @@
+*.toml
+.idea
+*.iml
+/vendor
+/build
+/cmake-build
+/cmake-build-debug
