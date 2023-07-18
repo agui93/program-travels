@@ -5,3 +5,7 @@
 /build
 /cmake-build
 /cmake-build-debug
+/workdir/logs
+workdir/logs/nginx.pid
+workdir/logs/access.log
+workdir/logs/error.log
