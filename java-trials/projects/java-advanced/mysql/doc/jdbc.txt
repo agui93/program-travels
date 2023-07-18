@@ -1,0 +1,25 @@
+JDBC
+    https://docs.oracle.com/javase/tutorial/jdbc/basics/index.html
+    https://www.oracle.com/technetwork/java/index-140429.html
+    https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/
+    https://www.tutorialspoint.com/jdbc/jdbc-db-connections.htm
+    https://www.javatpoint.com/java-jdbc
+    Java_Transaction_Design_Strategies.pdf
+
+
+
+https://segmentfault.com/a/1190000013341344
+
+
+
+https://docs.oracle.com/javase/8/docs/technotes/guides/jdbc/jdbc_42.html
+https://www.javatpoint.com/java-jdbc
+https://www.geeksforgeeks.org/establishing-jdbc-connection-in-java/
+https://www.tutorialspoint.com/jdbc/index.htm
+
+
+https://www.oracle.com/technetwork/java/index-140429.html
+https://www.oracle.com/technetwork/java/index-141229.html
+https://docs.oracle.com/javase/tutorial/jdbc/basics/connecting.html
+
+

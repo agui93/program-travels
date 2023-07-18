@@ -1,0 +1,15 @@
+数据库连接池
+    HikariCP
+        https://github.com/brettwooldridge/HikariCP
+    Druid
+        https://github.com/alibaba/druid
+    HikariCP源码分析
+        https://www.fsby.fun/2020/07/30/HikariCP-source-code-0/
+        https://www.fsby.fun/tags/Hikari/
+        http://www.iocoder.cn/HikariCP/good-collection/?vip
+        https://zhuanlan.zhihu.com/p/107748071
+        https://github.com/brettwooldridge/HikariCP/wiki/Bad-Behavior:-Handling-Database-Down
+    对比HikariCP 与 Druid
+        https://cnhkblog.top/2018/06/02/HikariCp%E4%B8%8EDruid%E7%9A%84%E4%BA%A4%E9%94%8B/
+
+

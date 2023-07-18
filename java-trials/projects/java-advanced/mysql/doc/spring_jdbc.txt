@@ -1,0 +1,45 @@
+Spring-JDBC:
+    Spring技术内幕_深入解析Spring架构与设计原理第2版.pdf
+    https://docs.spring.io/spring/docs/4.0.x/spring-framework-reference/html/spring-data-tier.html
+
+
+
+
+Spring中的事务管理
+https://segmentfault.com/a/1190000020724401
+
+Spring事务传播行为
+https://segmentfault.com/a/1190000013341344
+
+
+SPRING + JDBC + HikariCP 集成
+SPRING + JDBC + Druid 集成
+
+
+Spring-JDBC
+        https://blog.csdn.net/wybqq/article/details/71774273
+        https://github.com/brettwooldridge/HikariCP
+        https://stackoverflow.com/questions/5684473/how-to-call-a-custom-rollback-method-in-spring-transaction-management
+
+        1. 事务传播机制
+        2. 事务隔离机制
+        3. 只读
+        4. 事务超时
+        5. 回滚规则
+
+        https://segmentfault.com/a/1190000013341344
+        https://docs.spring.io/spring/docs/4.0.x/spring-framework-reference/html/jdbc.html
+        https://docs.spring.io/spring/docs/4.0.x/spring-framework-reference/html/transaction.html
+        https://stackoverflow.com/questions/22221741/spring-global-transaction-vs-local-transaction
+        https://www.tutorialspoint.com/spring/spring_transaction_management.htm
+        https://docs.oracle.com/cd/A97335_02/apps.102/a83725/trans1.htm
+
+
+        基于下面二者进行原生的sql执行和事务处理
+            jdk中的java.sql.connection
+            mysql的driver:com.mysql.jdbc.Driver  https://www.cnblogs.com/intsmaze/p/5244709.html
+
+        基于spring-jdbc进行sql执行和事务处理
+            内部是如何基于原生的进行再封装
+
+

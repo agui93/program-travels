@@ -3,3 +3,9 @@ rootProject.name = 'java-advanced'
 include 'nio'
 include 'concurrence'
 
+include 'mysql'
+include 'mysql:jdbc'
+include 'mysql:hikaricp'
+include 'mysql:spring-jdbc'
+include 'mysql:mybatis'
+

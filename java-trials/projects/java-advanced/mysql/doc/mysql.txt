@@ -1,0 +1,22 @@
+原理
+    SQL编程
+    MySQL事务
+    InnoDB引擎
+数据库连接池
+    HikariCP
+    Druid
+java端开发框架(Entity <-> Sql) (并发控制)
+    JDBC
+    Spring-JDBC
+    mybatis
+Mysql
+    http://www.herongyang.com/MySQL/
+日志采集
+    日志的级别
+    日志的输出 保存 回收
+    日志的收集
+    需要考虑应用所在的环境: 容器 k8s 宿主机等；部署的隔离情况；等等
+监控打点
+    QPS ART 以及 百分位
+    不同客户端节点请求的维度，请求时不同server集群的维度
+    应用维度
