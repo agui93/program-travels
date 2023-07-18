@@ -1,3 +1,7 @@
+
+使用cmake编译nginx源码，使用clion阅读和调试源码
+
+```bash
 tar -zxvf nginx-source-cmake.tar.gz
 
 cd nginx-source-cmake/nginx-source-v1.17.3/
@@ -19,5 +23,6 @@ cmake .. && make
 
 nginx 
 ps aux|grep nginx
+```
 
 
