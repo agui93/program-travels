@@ -1,0 +1,58 @@
+###########################
+# Pod的livenessProbe: livenessProbe 检查机制 
+#
+# 实验:
+#   kubectl apply -f pod-probe-liveness-check.yaml
+#   kubectl get -f pod-probe-liveness-check.yaml
+#   kubectl exec -it -n pod-liveness-check-test pods/pod-liveness-check-test -- tail -f /data/record
+#     能够观测到: 
+#       commandBeginTime后initialDelaySeconds秒: livenessProbe开始检查;
+#       然后,每隔periodSeconds秒: livenessProbe进行检查;
+#   kubectl exec -it -n pod-liveness-check-test pods/pod-liveness-check-test -- rm -rf /tmp/livehealth
+#     新开Terminal执行这个命令: 造成livenessProbe检查失败
+#   kubectl exec -it -n pod-liveness-check-test pods/pod-liveness-check-test -- cat /data/record
+#     继续观察, 能够发现: liveBegin 和 liveOk 有failureThreshold次不配对 
+#     然后, 能够发现有一条: commandBeginTime, 这是容器重启后command重新执行了
+#   kubectl get -f pod-probe-liveness-check.yaml
+#     通过这个命令能发现: RESTARTS是1, 发生过重启
+###########################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-liveness-check-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-liveness-check-test
+  namespace: pod-liveness-check-test
+  labels:
+    app: pod-liveness-check-test
+spec:
+  restartPolicy: Always
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+  initContainers:
+    - name: init-container-1
+      image: k8strials.harbor.com/library/busybox:latest
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+  containers:
+  - name: pod-liveness-check-test
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "echo 'commandBeginTime:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record; touch /tmp/livehealth ; sleep 3600;"]
+    volumeMounts:
+      - name: shared-data
+        mountPath: /data
+    livenessProbe:
+      exec:
+        command: [ "sh", "-c", "echo 'liveBegin:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record && cat /tmp/livehealth && echo 'liveOk:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record" ]
+      failureThreshold: 2 
+      initialDelaySeconds: 20
+      periodSeconds: 10 
+      timeoutSeconds: 8 
+---

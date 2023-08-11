@@ -1,0 +1,32 @@
+###############################
+# Pod的生命周期: Pending -> Running -> Failed
+#
+# 实验:
+#   kubectl apply -f pod-lifecycle-failed.yaml
+#   kubectl get   -f pod-lifecycle-failed.yaml
+#   kubectl get -n pod-lifecycle-failed-test pod pod-lifecycle-failed -o yaml
+#   kubectl get -n pod-lifecycle-failed-test pod pod-lifecycle-failed -o jsonpath='{.status.phase}'
+#     能观测到输出: Failed
+#   kubectl get -n pod-lifecycle-failed-test pod pod-lifecycle-failed -o jsonpath='{.status.containerStatuses[0].state}' |jq
+#     能观测到输出exitCode startedAt finishedAt的情况
+###############################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-lifecycle-failed-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-lifecycle-failed
+  namespace: pod-lifecycle-failed-test
+  labels:
+    app: pod-lifecycle-failed
+spec:
+  restartPolicy: Never
+  containers:
+  - name: pod-lifecycle-failed
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "sleep 15; exit 1;"]

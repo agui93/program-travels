@@ -1,0 +1,109 @@
+################
+#  https://kubernetes.github.io/ingress-nginx/user-guide/basic-usage/
+#  curl {{IP}}/apple
+#  curl {{IP}}/apple/a
+#  curl {{IP}}/banana
+#  curl {{IP}}/banana/a
+################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apple
+  namespace: ingress-test
+  labels:
+    app: apple
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: apple
+  template:
+    metadata:
+      labels:
+        app: apple
+    spec:
+      containers:
+        - name: apple-app
+          image: hashicorp/http-echo
+          args:
+            - "-text=apple"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: apple-service
+  namespace: ingress-test
+spec:
+  selector:
+    app: apple
+  ports:
+    - port: 5678 # Default port for image
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: banana
+  namespace: ingress-test
+  labels:
+    app: banana
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: banana
+  template:
+    metadata:
+      labels:
+        app: banana
+    spec:
+      containers:
+        - name: banana-app
+          image: hashicorp/http-echo
+          args:
+            - "-text=banana"
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: banana-service
+  namespace: ingress-test
+spec:
+  selector:
+    app: banana
+  ports:
+    - port: 5678 # Default port for image
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: example-ingress
+  namespace: ingress-test
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - http:
+      paths:
+        - path: /apple
+          # pathType: Prefix
+          pathType: Exact
+          backend:
+            service:
+              name: apple-service
+              port:
+                number: 5678
+        - path: /banana
+          pathType: Prefix
+          backend:
+            service:
+              name: banana-service
+              port:
+                number: 5678
+  ingressClassName: nginx
+---

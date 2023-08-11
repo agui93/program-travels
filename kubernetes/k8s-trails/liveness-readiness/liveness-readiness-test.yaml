@@ -1,0 +1,66 @@
+#############################################
+# Pod生命周期和Pod重启策略
+# Pod Probe的liveness readiness 和 Deployment的调度
+#
+# kubectl apply -f liveness-readiness-test.yaml
+# kubectl get -n liveness-readiness-test all
+# kubectl rollout status -n liveness-readiness-test deployment liveness-readiness-test
+#
+#############################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: liveness-readiness-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: liveness-readiness-test
+  namespace: liveness-readiness-test
+spec:
+  replicas: 4 
+  # minReadySeconds: 10
+  selector:
+    matchLabels:
+      app: liveness-readiness-test
+  progressDeadlineSeconds: 50
+  template:
+    metadata:
+      labels:
+        app: liveness-readiness-test
+    spec:
+        containers:
+        - name: liveness-readiness-test
+          image: k8strials.harbor.com/library/ubuntu:22.04
+          imagePullPolicy: IfNotPresent
+          command: [ "/bin/bash", "-c", "echo 'commandBegin:'$(date '+%Y-%m-%d %H:%M:%S') >> /tmp/record ; sleep 30;  touch /tmp/livehealth; touch /tmp/readyhealth ; sleep 3600" ]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 200Mi
+            limits:
+              cpu: 200m
+              memory: 300Mi
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "echo 'postStart:'$(date '+%Y-%m-%d %H:%M:%S') >>/tmp/record"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "echo 'preStop:'$(date '+%Y-%m-%d %H:%M:%S') >>/tmp/record"]
+          livenessProbe:
+            exec:
+              command: [ "/bin/bash", "-c", "echo 'liveBegin:'$(date '+%Y-%m-%d %H:%M:%S') >> /tmp/record && cat /tmp/livehealth && echo 'liveOk:'$(date '+%Y-%m-%d %H:%M:%S') >> /tmp/record" ]
+            failureThreshold: 1
+            initialDelaySeconds: 40
+            periodSeconds: 10 
+            timeoutSeconds: 8 
+          readinessProbe:
+            exec:
+              command: [ "/bin/bash", "-c", "echo 'readyBegin:'$(date '+%Y-%m-%d %H:%M:%S') >> /tmp/record && cat /tmp/readyhealth  && echo 'readyOk:'$(date '+%Y-%m-%d %H:%M:%S') >> /tmp/record" ]
+            failureThreshold: 1
+            initialDelaySeconds: 20 
+            periodSeconds: 10
+            timeoutSeconds: 10 
+

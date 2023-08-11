@@ -1,0 +1,33 @@
+###############################
+# 普通Pod, 对比静态Pod
+#
+# 实验:
+#   kubectl apply -f pod-created-normal.yaml
+#   kubectl get -f pod-created-normal.yaml -o wide
+#   curl $(kubectl get -n pod-normal-test pod pod-normal-apple -o jsonpath='{.status.podIP}'):5678
+#     观察到输出: normal apple
+#   
+###############################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-normal-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-normal-apple
+  namespace: pod-normal-test
+  labels:
+    app: pod-normal-apple
+spec:
+  containers:
+  - name: pod-normal-apple
+    image: k8strials.harbor.com/library/hashicorp/http-echo:latest
+    imagePullPolicy: IfNotPresent
+    args:
+      - "-text=normal apple"
+    ports:
+    - containerPort: 5678
+      protocol: TCP

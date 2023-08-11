@@ -1,0 +1,72 @@
+######################################################
+# k8s Taints 和 Tolerations 
+#
+# 实验:
+#   实验环境: 只有一个节点: k8s-single
+#   设置taints
+#     kubectl taint nodes k8s-single special=true:NoSchedule
+#   查看taints
+#     kubectl get nodes k8s-single -o jsonpath='{.spec.taints}'
+#   kubectl apply -f pod-taints-tolerations.yaml 
+#   kubectl get -f pod-taints-tolerations.yaml 
+#     观察到: pod/pod-with-tolerations 是Running
+#     观察到: pod/pod-without-tolerations 是Pending
+#   kubectl describe -f pod-taints-tolerations.yaml 
+#     观察pod-without-tolerations: 0/1 nodes are available: 1 node(s) had untolerated taint {special: true}.
+#   取消taints: 为了不影响以后的实验，记得取消taints
+#     kubectl taint nodes k8s-single special=true:NoSchedule-
+#   查看taints
+#     kubectl get nodes k8s-single -o jsonpath='{.spec.taints}'
+#
+######################################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-taints-tolerations-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-tolerations
+  namespace: pod-taints-tolerations-test
+spec:
+  restartPolicy: Never
+  tolerations:
+    - key: special
+      operator: Equal
+      value: "true"
+      effect: NoSchedule
+  containers:
+    - name: container-with-tolerations
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 200m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-without-tolerations
+  namespace: pod-taints-tolerations-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: container-without-tolerations
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 200m
+---

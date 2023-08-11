@@ -1,0 +1,63 @@
+###########################
+# Pod的readinessProbe: readiness 检查机制 
+#
+# 实验:
+#   kubectl apply -f pod-probe-readiness-check.yaml 
+#   kubectl get -f pod-probe-readiness-check.yaml
+#   kubectl get -n pod-readiness-check-test pods pod-readiness-check-test -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+#     如果执行apply后，立即查看Ready的状态: 输出False
+#     然后, 大约initialDelaySeconds秒后, 重新执行这个命令: 输出True
+#   kubectl exec -it -n pod-readiness-check-test pods/pod-readiness-check-test -- tail -f /data/record
+#     能够观测到: 
+#       commandBeginTime后initialDelaySeconds秒: readinessProbe开始检查;
+#       然后, 每隔periodSeconds秒: readinessProbe进行检查;
+#   kubectl exec -it -n pod-readiness-check-test pods/pod-readiness-check-test -- rm -rf /tmp/readyhealth
+#     新开Terminal执行这个命令: 造成readinessProbe检查失败
+#   kubectl exec -it -n pod-readiness-check-test pods/pod-readiness-check-test -- tail -f /data/record
+#     继续观察, 能够发现: 每隔periodSeconds秒输出readyBegin, 没有配对的readyOk 
+#     执行: kubectl get -n pod-readiness-check-test pods pod-readiness-check-test -o jsonpath='{.status.conditions[?(@.type=="Ready")].status}'
+#       查看Ready的状态: 输出False
+#   kubectl get -f pod-probe-readiness-check.yaml
+#     通过这个命令能发现: RESTARTS是0, 没有发生过重启; 
+#     (readiness失败, 并且pod restartPolicy 是Always, kubelet 并不会自动重启Pod内的容器, 和使用Deployment创建Pod时有区别)
+###########################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-readiness-check-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-readiness-check-test
+  namespace: pod-readiness-check-test
+  labels:
+    app: pod-readiness-check-test
+spec:
+  restartPolicy: Always
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+  initContainers:
+    - name: init-container-1
+      image: k8strials.harbor.com/library/busybox:latest
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+  containers:
+  - name: pod-readiness-check-test
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "echo 'commandBeginTime:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record; touch /tmp/readyhealth ; sleep 3600;"]
+    volumeMounts:
+      - name: shared-data
+        mountPath: /data
+    readinessProbe:
+      exec:
+        command: [ "sh", "-c", "echo 'readyBegin:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record && cat /tmp/readyhealth && echo 'readyOk:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record" ]
+      failureThreshold: 2 
+      initialDelaySeconds: 20
+      periodSeconds: 10 
+      timeoutSeconds: 8 
+---

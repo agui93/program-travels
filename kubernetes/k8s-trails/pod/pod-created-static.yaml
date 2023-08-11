@@ -1,0 +1,33 @@
+###############################
+# 静态Pod: kubelet根据pod-manifest-path自动调度, pod-manifest-path目录一般是/etc/kubernetes/manifests/
+#
+# 实验:
+#   cp pod-created-static.yaml /etc/kubernetes/manifests/
+#   kubectl get pods -o wide| grep static-apple
+#     能够观察到pod: static-apple-$$(hostname)
+#     调试命令, 观察kubelet的日志: journalctr -f -u kubelet
+#   curl $(kubectl get pods -o wide| grep static-apple|awk '{print $6":5678"}')    
+#     能够观察到输出: apple 
+# 实验:
+#   rm /etc/kubernetes/manifests/pod-created-static.yaml 
+#   kubectl get pods -o wide| grep static-apple
+#     能够观察到pod已不存在
+#
+###############################
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-apple
+  labels:
+    app: static-apple
+spec:
+  containers:
+  - name: static-apple
+    image: k8strials.harbor.com/library/hashicorp/http-echo:latest
+    imagePullPolicy: IfNotPresent
+    args:
+      - "-text=apple"
+    ports:
+    - containerPort: 5678
+      protocol: TCP

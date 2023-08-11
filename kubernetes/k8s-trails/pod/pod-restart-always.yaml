@@ -1,0 +1,48 @@
+###############################
+# Pod的重启策略: Always, 当容器失效时，由kubelet自动重启该容器
+# Pod的Restart Backoff策略: 使用指数退避算法（exponential backoff）来计算重试延迟和次数
+#     kubelet重启失效容器的时间间隔以sync-frequency乘以2n来计算，例如1、2、4、8倍等，最长延时5min，并且在成功重启后的10min后重置该时间
+#
+# 实验:
+#  kubectl get -f pod-restart-always.yaml  -o wide
+#    启动后60秒，能够观察到RESTARTS大于0
+#  kubectl events -n pod-restart-always-test pod-restart-always.yaml
+#    观察到Restart事件
+#  kubectl get -n pod-restart-always-test pods pod-restart-always -o yaml
+#  kubectl get -n pod-restart-always-test pods pod-restart-always -o jsonpath='{.status.containerStatuses}' |jq
+#    能够观察到lastState state restartCount, 其中重启过程也能观察到, 第6次重启时能够观察到: back-off 5m0s restarting failed
+#  kubectl exec -it -n pod-restart-always-test pods/pod-restart-always -- cat /data/record
+#    可以观察到启动的时间间隔在逐渐扩大
+###############################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-restart-always-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-restart-always
+  namespace: pod-restart-always-test
+  labels:
+    app: pod-restart-always
+spec:
+  restartPolicy: Always
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+  initContainers:
+    - name: init-container-1
+      image: k8strials.harbor.com/library/busybox:latest
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+  containers:
+  - name: pod-restart-always
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "echo 'command:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record; sleep 60;"]
+    volumeMounts:
+      - name: shared-data
+        mountPath: /data

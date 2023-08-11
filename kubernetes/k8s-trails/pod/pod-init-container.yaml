@@ -1,0 +1,61 @@
+########################################
+# Init Containers 是在主容器之前运行的一种特殊类型的容器。它们用于在主容器启动之前执行预配置的任务或初始化操作
+#
+# 实验:
+#  kubectl apply -f pod-init-container.yaml
+#  kubectl get -f pod-init-container.yaml
+#  watch kubectl get -f pod-init-container.yaml 
+#    启动后,  观察到Status: Init:0/2
+#    过60s后, 观察到Status: Init:1/2 
+#    再过30s, 观察到Status: Running
+#  kubectl exec -it -n pod-init-container-test pod-with-init-container -- cat /data/workdir/logs
+#    能够观察到init container 和 main container的启动命令的日志记录
+# 
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-init-container-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-with-init-container
+  namespace: pod-init-container-test
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: shared-volume
+      emptyDir: {}
+  initContainers:
+    - name: init-container-1
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "echo 'Init container 1: '$(date '+%Y-%m-%d %H:%M:%S') >> /data/workdir/logs && sleep 60"]
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /data/workdir
+    - name: init-container-2
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "echo 'Init container 2: '$(date '+%Y-%m-%d %H:%M:%S') >> /data/workdir/logs && sleep 30"]
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /data/workdir
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "echo 'Main container: '$(date '+%Y-%m-%d %H:%M:%S') >> /data/workdir/logs && sleep 3600;"]
+      volumeMounts:
+        - name: shared-volume
+          mountPath: /data/workdir
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 200m
+---

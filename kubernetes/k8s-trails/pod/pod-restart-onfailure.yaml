@@ -1,0 +1,82 @@
+###############################
+# Pod的重启策略: OnFailure, 当容器终止运行且退出码不为0时，由kubelet自动重启该容器
+# 
+# 实验:
+#   kubectl apply -f pod-restart-onfailure.yaml 
+#   kubectl get -f pod-restart-onfailure.yaml 
+#     能够观察到pod/pod-restart-onfailure-exit-failed的RESTARTS大于1
+#     能够观察到pod/pod-restart-onfailure-exit-noraml的Status是Completed, RESTARTS是0
+#   kubectl get -n pod-restart-onfailure-test pods pod-restart-onfailure-exit-noraml -o jsonpath='{.status.phase}'
+#     能够观察到pod/pod-restart-onfailure-exit-noraml的生命周期阶段是:Succeeded
+#   kubectl get -n pod-restart-onfailure-test pods pod-restart-onfailure-exit-noraml -o jsonpath='{.status.containerStatuses}' |jq
+#     能够观察到pod/pod-restart-onfailure-exit-noraml的容器: 是正常退出，没有执行restart
+#   kubectl get -n pod-restart-onfailure-test pod pod-restart-onfailure-exit-failed -o yaml
+#     查看pod/pod-restart-onfailure-exit-failed
+#   kubectl get -n pod-restart-onfailure-test pod pod-restart-onfailure-exit-failed -o jsonpath='{.status.phase}'
+#     能够观察到pod/pod-restart-onfailure-exit-failed的生命周期是Running
+#   kubectl get -n pod-restart-onfailure-test pod pod-restart-onfailure-exit-failed -o jsonpath='{.status.containerStatuses}' |jq
+#     能够观察到pod/pod-restart-onfailure-exit-failed的容器: 是异常退出，执行restart
+#   kubectl exec -it -n pod-restart-onfailure-test pods/pod-restart-onfailure-exit-failed -- cat /data/record
+#     当容器运行时，能够观察到容器启动的时间间隔情况
+###############################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-restart-onfailure-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-restart-onfailure-exit-failed
+  namespace: pod-restart-onfailure-test
+  labels:
+    app: pod-restart-onfailure-exit-failed
+spec:
+  restartPolicy: OnFailure
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+  initContainers:
+    - name: init-container-1
+      image: k8strials.harbor.com/library/busybox:latest
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+  containers:
+  - name: pod-restart-exit-failed
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "echo 'command:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record; sleep 60; exit 1;"]
+    volumeMounts:
+      - name: shared-data
+        mountPath: /data
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-restart-onfailure-exit-noraml
+  namespace: pod-restart-onfailure-test
+  labels:
+    app: pod-restart-onfailure-exit-normal
+spec:
+  restartPolicy: OnFailure
+  volumes:
+    - name: shared-data
+      emptyDir: {}
+  initContainers:
+    - name: init-container-1
+      image: k8strials.harbor.com/library/busybox:latest
+      volumeMounts:
+        - name: shared-data
+          mountPath: /data
+  containers:
+  - name: pod-restart-onfailure-exit-normal
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "echo 'command:'$(date '+%Y-%m-%d %H:%M:%S') >> /data/record; sleep 60; exit 0;"]
+    volumeMounts:
+      - name: shared-data
+        mountPath: /data
+---
+

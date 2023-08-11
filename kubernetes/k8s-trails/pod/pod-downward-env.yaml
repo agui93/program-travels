@@ -1,0 +1,81 @@
+#######################################
+# 通过 downward api 获取Pod或容器的元数据
+#
+# 实验:
+#   kubectl apply -f pod-downward-env.yaml
+#   kubectl get -f pod-downward-env.yaml
+#   kubectl -n pod-downward-env-test logs pods/pod-downward-env-test |grep ^POD
+#     输出环境变量: POD_NAME POD_NAMESPACE POD_IP
+#   kubectl -n pod-downward-env-test logs pods/pod-downward-env-test | grep ^CONTAINER
+#     输出环境变量: CONTAINER_APP CONTAINER_CPU_REQUEST CONTAINER_CPU_LIMIT  等
+#
+#######################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-downward-env-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-downward-env-test
+  namespace: pod-downward-env-test
+  labels:
+    app: pod-downward-env-test
+spec:
+  restartPolicy: Never 
+  containers:
+  - name: pod-downward-env-test
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "env; sleep 3600;"]
+    resources:
+      requests:
+        memory: 32Mi
+        cpu: 100m
+      limits:
+        memory: 64Mi
+        cpu: 200m 
+    env:
+      - name: POD_NAME
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.name
+      - name: POD_NAMESPACE
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.namespace
+      - name: POD_IP
+        valueFrom:
+          fieldRef:
+            fieldPath: status.podIP
+      - name: CONTAINER_APP
+        valueFrom:
+          fieldRef:
+            fieldPath: metadata.labels['app']
+      - name: CONTAINER_CPU_REQUEST
+        valueFrom:
+          resourceFieldRef:
+            containerName: pod-downward-env-test
+            divisor: 1m
+            resource: requests.cpu              
+      - name: CONTAINER_CPU_LIMIT
+        valueFrom:
+          resourceFieldRef:
+            containerName: pod-downward-env-test
+            divisor: 1m
+            resource: limits.cpu              
+      - name: CONTAINER_MEMORY_REQUEST
+        valueFrom:
+          resourceFieldRef:
+            containerName: pod-downward-env-test
+            divisor: 1Mi
+            resource: requests.memory
+      - name: CONTAINER_MEMORY_LIMIT
+        valueFrom:
+          resourceFieldRef:
+            containerName: pod-downward-env-test
+            divisor: 1Mi
+            resource: limits.memory
+---

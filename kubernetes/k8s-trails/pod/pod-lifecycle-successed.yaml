@@ -1,0 +1,34 @@
+###############################
+# Pod的生命周期: Pending -> Running -> Successed
+#
+# 实验:
+#   kubectl apply -f pod-lifecycle-successed.yaml
+#   kubectl get -f pod-lifecycle-successed.yaml -o wide
+#      能观察到Status: Running -> Completed
+#   kubectl get -n pod-lifecycle-successed-test pods  pod-lifecycle-successed  -o yaml
+#      能观察到status.phase: Succeeded
+#      能观察到status.containerStatuses.state.exitCode: 0
+#   kubectl get -n pod-lifecycle-successed-test pods  pod-lifecycle-successed -o jsonpath='{.status.phase}'
+#     能观察到: Succeeded
+#     
+###############################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-lifecycle-successed-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-lifecycle-successed
+  namespace: pod-lifecycle-successed-test
+  labels:
+    app: pod-lifecycle-successed
+spec:
+  restartPolicy: Never
+  containers:
+  - name: pod-lifecycle-successed
+    image: k8strials.harbor.com/library/busybox:latest
+    imagePullPolicy: IfNotPresent
+    command: ["sh", "-c", "sleep 10"]

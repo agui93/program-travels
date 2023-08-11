@@ -1,0 +1,33 @@
+###############################
+# Pod的生命周期: Pending状态
+#
+# 实验:
+#   kubectl apply -f pod-lifecycle-pending.yaml
+#   kubectl get -f pod-lifecycle-pending.yaml -o wide
+#   kubectl get -n pod-lifecycle-pending-test pods pod-lifecycle-pending-apple -o jsonpath='{.status.phase}'
+#     能够观察到输出status.phase: Pending
+#
+###############################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-lifecycle-pending-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-lifecycle-pending-apple
+  namespace: pod-lifecycle-pending-test
+  labels:
+    app: pod-lifecycle-pending-apple
+spec:
+  containers:
+  - name: pod-lifecycle-pending-apple
+    image: k8strials.harbor.com/library/hashicorp/http-echo:image-not-exists  # 使用不存在的镜像
+    imagePullPolicy: IfNotPresent
+    args:
+      - "-text=apple"
+    ports:
+    - containerPort: 5678
+      protocol: TCP

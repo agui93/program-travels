@@ -1,0 +1,52 @@
+#######################################
+# 通过 downward api 的 volume 方式, 获取Pod或容器的元数据
+#
+# 实验:
+#   kubectl apply -f pod-downward-volume.yaml 
+#   kubectl get -f pod-downward-volume.yaml
+#   kubectl exec -n pod-downward-volume-test pods/pod-downward-volume-test -- ls -l /etc/podinfo
+#     显示有两个文件
+#   kubectl exec -n pod-downward-volume-test pods/pod-downward-volume-test -- cat /etc/podinfo/labels
+#     显示labels内容
+#   kubectl exec -n pod-downward-volume-test pods/pod-downward-volume-test -- cat /etc/podinfo/annotations
+#     显示annotations内容
+#######################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pod-downward-volume-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-downward-volume-test
+  namespace: pod-downward-volume-test
+  labels:
+    app: pod-downward-volume-test
+    zone: east
+    project: abcd
+  annotations:
+    build: hello
+    builder: john
+spec:
+  restartPolicy: Never
+  volumes:
+    - name: podinfo
+      downwardAPI:
+        items:
+          - path: "labels"
+            fieldRef:
+              fieldPath: metadata.labels
+          - path: "annotations"
+            fieldRef:
+              fieldPath: metadata.annotations
+  containers:
+    - name: pod-downward-volume-test
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      volumeMounts:
+        - name: podinfo
+          mountPath: /etc/podinfo
+---
