@@ -35,6 +35,7 @@
 - [k8s实验环境之单节点环境](kubernetes/k8s实验环境之单节点环境/k8s实验环境之单节点环境.md)
 - [k8s实验环境之多节点环境](kubernetes/k8s实验环境之多节点环境/k8s实验环境之多节点环境.md)
 - [helm安装和使用指南](kubernetes/helm安装和使用指南/helm安装和使用指南.md)
+- [kubectl命令自动补全](kubernetes/kubectl命令自动补全/kubectl命令自动补全.md)
 - [k8s监控体系的搭建和使用(基于prometheus grafana监控机器和k8s集群情况)](kubernetes/k8s监控体系的搭建和使用/k8s监控体系的搭建和使用.md)
 - [k8s Pod相关的概念和实验](kubernetes/k8s的Pod概念和Pod实验/k8s的Pod概念和Pod实验.md )
     - [Pod 实验](kubernetes/k8s-trails/pod)
