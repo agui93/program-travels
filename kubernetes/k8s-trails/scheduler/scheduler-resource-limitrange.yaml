@@ -1,0 +1,139 @@
+########################################
+#  LimitRange 是一种资源管理机制
+#    用于定义和强制执行容器资源的最小和最大限制
+#    可以确保Pod和容器在分配资源时遵循一组预定义的限制
+#
+#  实验:
+#    kubectl apply -f scheduler-resource-limitrange.yaml
+#      能够观察到: pods "over-limitrange-max" is forbidden, 违反了limitRange的max约束
+#      能够观察到: pods "over-limitrange-ratio" is forbidden, 违反了limitRange的ratio约束
+#    kubectl get -f scheduler-resource-limitrange.yaml
+#    kubectl get pods -n scheduler-resource-limitrange-test -o wide
+#    kubectl get pods -n scheduler-resource-limitrange-test  -o  jsonpath='{range .items[*]}{.metadata.name}{range .spec.containers[*]}{"\n  "}{.name} {.resources}{end}{"\n"}{end}'
+#      能够观察到pod内的容器的资源情况: 符合limitrange的约束
+#    kubectl delete -f scheduler-resource-limitrange.yaml
+#      回收
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-resource-limitrange-test
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: resource-ratio-limit-range
+  namespace: scheduler-resource-limitrange-test
+spec:
+  limits:
+  - type: Container
+    min:
+      cpu: 100m
+      memory: 100Mi
+    max:
+      cpu: 500m
+      memory: 500Mi
+    default:
+      cpu: 200m
+      memory: 200Mi
+    defaultRequest:
+      cpu: 150m
+      memory: 150Mi
+    maxLimitRequestRatio:
+      cpu: "4"
+      memory: "2"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fronted-deployment
+  namespace: scheduler-resource-limitrange-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-by-default-limitrange
+  namespace: scheduler-resource-limitrange-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: pod-between-limitrange
+  namespace: scheduler-resource-limitrange-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        limits:
+          memory: 120Mi
+          cpu: 120m
+        limits:
+          memory: 150Mi
+          cpu: 150m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: over-limitrange-max
+  namespace: scheduler-resource-limitrange-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        limits:
+          memory: 600Mi
+          cpu: 600m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: over-limitrange-ratio
+  namespace: scheduler-resource-limitrange-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 100Mi
+          cpu: 100m
+        limits:
+          memory: 240Mi
+          cpu: 410m
+---
+
+

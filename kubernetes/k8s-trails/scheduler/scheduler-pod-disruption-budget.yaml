@@ -1,0 +1,100 @@
+#####################################
+#  Pod Disruption Budget: 在进行维护、故障处理或其他情况下，可容忍受干扰的 Pod 的最小数量
+#
+#  实验环境:
+#    三个节点: k8svm01 k8svm02 k8svm03
+#  实验:
+#    kubectl apply -f scheduler-pod-disruption-budget.yaml
+#    kubectl get -f scheduler-pod-disruption-budget.yaml
+#    kubectl get pods -n scheduler-pod-disruption-budget-test -o wide
+#    kubectl get deployment -n scheduler-pod-disruption-budget-test pod-disruption-budget-test-deployment --watch
+#      新开窗口，观察watch变更: pod-disruption-budget-test-deployment
+#    kubectl get deployment -n scheduler-pod-disruption-budget-test cmp-deployment --watch
+#      新开窗口，观察watch变更: cmp-deployment
+#    kubectl drain k8svm02 --ignore-daemonsets
+#      观察watch变更: pod-disruption-budget-test-deployment, AVAILABLE数量不会少于3
+#      观察watch变更: cmp-deployment, AVAILABLE数量会低于3
+#      观察驱逐记录，有可能观察到: Cannot evict pod as it would violate the pod's disruption budget.
+#    kubectl drain k8svm03 --ignore-daemonsets
+#      观察watch变更: pod-disruption-budget-test-deployment, AVAILABLE数量不会少于3
+#      观察watch变更: cmp-deployment, AVAILABLE数量会低于3
+#      观察驱逐记录，有可能观察到: Cannot evict pod as it would violate the pod's disruption budget.
+# 恢复实验环境:
+#    kubectl uncordon k8svm02
+#    kubectl uncordon k8svm03
+#    kubectl delete -f scheduler-pod-disruption-budget.yaml
+#      回收
+#####################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-pod-disruption-budget-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pod-disruption-budget-test-deployment
+  namespace: scheduler-pod-disruption-budget-test
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: disruption-budget-test
+  template:
+    metadata:
+      labels:
+        app: disruption-budget-test
+    spec:
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: my-pdb
+  namespace: scheduler-pod-disruption-budget-test
+spec:
+  minAvailable: 3
+  selector:
+    matchLabels:
+      app: disruption-budget-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cmp-deployment
+  namespace: scheduler-pod-disruption-budget-test
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: cmp-test
+  template:
+    metadata:
+      labels:
+        app: cmp-test
+    spec:
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

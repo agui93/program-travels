@@ -1,0 +1,66 @@
+#####################################
+#  kubectl cordon 用于将节点标记为不可调度状态，但节点上现有的 Pod 不会受到影响
+#  
+#  声明解释:
+#    声明了nodeSelector: kubernetes.io/hostname: k8svm03
+#    会把节点调度到k8svm03节点
+#
+#   
+#  实验:
+#    kubectl apply -f scheduler-node-cordon.yaml
+#    kubectl get -f scheduler-node-cordon.yaml
+#    kubectl get pods -n scheduler-node-cordon-test -o wide
+#      可以观察到: 所有pod被调度到同一个节点k8svm03上了
+#    kubectl cordon k8svm03
+#      标记k8svm03节点不可调度
+#    kubectl get pods -n scheduler-node-cordon-test -o wide
+#      可以观察到: 节点上已有的pod不受影响
+#    kubectl delete  -f scheduler-node-cordon.yaml
+#      回收
+#    kubectl apply -f scheduler-node-cordon.yaml
+#      重新部署
+#    kubectl get pods -n scheduler-node-cordon-test -o wide
+#      可以观察到: pod 处于Pending状态
+#    kubectl uncordon k8svm03
+#      标记k8svm03节点可以重新接受调度
+#    kubectl get pods -n scheduler-node-cordon-test -o wide
+#      可以观察到: 所有pod被调度到同一个节点k8svm03上了
+#    kubectl delete  -f scheduler-node-cordon.yaml
+#      回收
+#####################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-node-cordon-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cordon-test-deployment
+  namespace: scheduler-node-cordon-test
+spec:
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: cordon-test
+  template:
+    metadata:
+      labels:
+        app: cordon-test
+    spec:
+      nodeSelector:
+        kubernetes.io/hostname: k8svm03
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

@@ -1,0 +1,85 @@
+########################################
+# ResourceQuota 资源配额: 
+#   对每个命名空间的资源消耗总量提供限制 
+#   它可以限制命名空间中某种类型的对象的总数目上限
+#   也可以限制命名空间中的 Pod 可以使用的计算资源的总上限
+#
+#
+# 实验:
+#   kubectl apply -f scheduler-resource-resourcequota.yaml
+#     创建成功: resource-legal-test
+#     创建失败: resource-illegal-test
+#   kubectl get -f scheduler-resource-resourcequota.yaml
+#     存在Running: resource-legal-test
+#     不存在: resource-illegal-test
+#   kubectl get -n scheduler-resource-resourcequota-test resourcequotas cpu-mem-quota 
+#     观察到资源配额的使用情况
+#   kubectl get -n scheduler-resource-resourcequota-test resourcequotas cpu-mem-quota -o yaml
+#     观察到资源配额的使用情况
+#   kubectl get -n scheduler-resource-resourcequota-test resourcequotas cpu-mem-quota -o jsonpath='{ .status }' | jq .
+#     观察到资源配额的使用情况: used 和 resource-legal-test的资源情况一样
+#   kubectl delete -n scheduler-resource-resourcequota-test pods resource-legal-test 
+#     删除pod resource-legal-test
+#   kubectl get -n scheduler-resource-resourcequota-test resourcequotas cpu-mem-quota -o jsonpath='{ .status }' | jq .
+#    删除pod resource-legal-test后, 观察到资源配额的使用情况: used都是0; 
+#   kubectl delete -f scheduler-resource-resourcequota.yaml
+#     回收
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-resource-resourcequota-test
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: cpu-mem-quota
+  namespace: scheduler-resource-resourcequota-test
+spec:
+  hard:
+    requests.cpu: 100m
+    requests.memory: 50Mi
+    limits.cpu: 200m
+    limits.memory: 100Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-legal-test
+  namespace: scheduler-resource-resourcequota-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 32Mi
+        limits:
+          cpu: 200m
+          memory: 64Mi
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: resource-illegal-test
+  namespace: scheduler-resource-resourcequota-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          cpu: 100m
+          memory: 64Mi
+        limits:
+          cpu: 200m
+          memory: 128Mi
+---

@@ -1,0 +1,82 @@
+########################################
+# Pod QoS (Quality of Service) 
+#   Kubernetes 根据为 Pod 中的容器指定的资源约束为每个 Pod 设置 QoS 类
+#   Kubernetes 依赖这种分类来决定当 Node 上没有足够可用资源时要驱逐哪些 Pod
+#
+# 实验: pod 内有一个 container
+#   kubectl apply -f scheduler-qos-single-container.yaml
+#   kubectl get -f scheduler-qos-single-container.yaml
+#   观察pod的QoS类型
+#   kubectl get pods -n scheduler-qos-single-container-test -o jsonpath='{range .items[*]}{.metadata.name} {.status.qosClass}{"\n"}{end}'
+#   kubectl get pods -n scheduler-qos-single-container-test -o jsonpath='{range .items[*]}{.metadata.name} {.status.qosClass} {.spec.containers[0].resources}{"\n\n"}{end}' 
+#   kubectl get pods -n scheduler-qos-single-container-test -o jsonpath='{range .items[*]}{.metadata.name} {.status.qosClass} {"\n"} {.spec.containers[0].name}{": "}{.spec.containers[0].resources}{"\n\n"}{end}'   
+#     
+#   kubectl get -f scheduler-qos-single-container.yaml
+#     回收
+#
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-qos-single-container-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-guaranteed
+  namespace: scheduler-qos-single-container-test
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: k8svm01
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 32Mi
+          cpu: 100m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-burstable
+  namespace: scheduler-qos-single-container-test
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: k8svm01
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 120m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-besteffort
+  namespace: scheduler-qos-single-container-test
+spec:
+  restartPolicy: Never
+  nodeSelector:
+    kubernetes.io/hostname: k8svm01
+  containers:
+    - name: main-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+---

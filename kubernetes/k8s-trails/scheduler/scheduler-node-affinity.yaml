@@ -1,0 +1,155 @@
+##########################################
+# NodeAffinity（节点亲和性）: 用于在Pod定义中指定一组节点亲和性规则，以便将Pod调度到满足这些规则的节点上
+# NodeAntiAffinity (节点反亲和性) : 用于指定不允许将Pod调度到具有某些特定标签或其他节点属性的节点上
+#
+#  准备:
+#    列出集群中的节点
+#      kubectl get nodes
+#    显示所有节点及其关联的标签
+#      kubectl get nodes --show-labels
+#    对目标节点添加标签
+#      语法格式: kubectl label nodes <node-name> <label-key>=<label-value>
+#      举例: kubectl label nodes node1 role=backend
+#    对目标节点删除标签
+#      语法格式: kubectl label nodes <node-name> <label-key>-
+#      举例: kubectl label nodes node1 role-
+#
+# 
+#  实验:
+#     给节点设置zone标签
+#       kubectl label nodes k8svm02 zone=zonea
+#       kubectl label nodes k8svm03 zone=zoneb
+#     查看节点上的标签
+#       kubectl get nodes --show-labels
+#     部署应用:   
+#       kubectl apply -f scheduler-node-affinity.yaml
+#     查看应用:
+#       kubectl get -f scheduler-node-affinity.yaml  -o wide
+#       kubectl get pods -n scheduler-node-affinity-test -o wide
+#         观察node-affinity-zonea-test的分布，部署在zone=zonea节点，符合node affinity的预期
+#         观察node-affinity-zoneb-test的分布，部署在zone=zoneb节点，符合node affinity的预期
+#         观察node-antiaffinity-zone-test的分布，没有部署在zone=zonea 或者zone=zoneb的节点，符合node anti affinity的预期
+#     给节点删除zone标签
+#       kubectl label nodes k8svm02 zone-
+#       kubectl label nodes k8svm03 zone-
+#     删除应用:
+#       kubectl delete -f scheduler-node-affinity.yaml
+##########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-node-affinity-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-affinity-zonea-test
+  namespace: scheduler-node-affinity-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-affinity-zonea-test
+  template:
+    metadata:
+      labels:
+        app: node-affinity-zonea-test
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: zone
+                operator: In
+                values:
+                - zonea
+      containers:
+      - name: node-affinity-zonea-test
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-affinity-zoneb-test
+  namespace: scheduler-node-affinity-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-affinity-zoneb-test
+  template:
+    metadata:
+      labels:
+        app: node-affinity-zoneb-test
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: zone
+                operator: In
+                values:
+                - zoneb
+      containers:
+      - name: node-affinity-zoneb-test
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: node-antiaffinity-zone-test
+  namespace: scheduler-node-affinity-test
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: node-antiaffinity-zone-test
+  template:
+    metadata:
+      labels:
+        app: node-antiaffinity-zone-test
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: zone
+                operator: NotIn
+                values:
+                - zonea
+                - zoneb
+      containers:
+      - name: node-antiaffinity-zone-test
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

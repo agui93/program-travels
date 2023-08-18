@@ -1,0 +1,65 @@
+##########################################
+# ReplicaSet Controller
+#   维护一组在任何时候都处于运行状态的 Pod 副本的稳定集合
+#   通常用来保证给定数量的、完全相同的 Pod 的可用性
+#
+#  实验:
+#    kubectl apply -f scheduler-controller-replicaset.yaml     
+#    kubectl get -f scheduler-controller-replicaset.yaml -o wide
+#    kubectl get pods -n scheduler-controller-replicaset-test -o wide
+#      可以观察到有3个pod: Running
+#    kubectl get pods -n scheduler-controller-replicaset-test -o json | jq -r '.items[] | [.metadata.name, .metadata.ownerReferences[0].kind, .metadata.ownerReferences[0].name] | @tsv'
+#      观察每个pod的metadata.ownerReferences, 归属于ReplicaSet Controller 控制: frontend-replicaset
+#    kubectl get pods -n scheduler-controller-replicaset-test -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | shuf -n 1
+#      随机输出一个pod name
+#    kubectl get pods -n scheduler-controller-replicaset-test -o jsonpath='{.items[*].metadata.name}' | tr ' ' '\n' | shuf -n 1 | xargs -I {} kubectl delete -n scheduler-controller-replicaset-test pods {}
+#      随机删除一个pod
+#    kubectl get pods -n scheduler-controller-replicaset-test -o wide
+#      随机删除一个pod后，会发现重新部署了一个pod
+#    kubectl scale replicaset -n scheduler-controller-replicaset-test frontend-replicaset --replicas=4
+#      扩容副本到4个
+#    kubectl get pods -n scheduler-controller-replicaset-test -o wide
+#      扩容后，可以观察到有4个pod: Running
+#    kubectl scale replicaset -n scheduler-controller-replicaset-test frontend-replicaset --replicas=2
+#      缩容副本到2个
+#    kubectl get pods -n scheduler-controller-replicaset-test -o wide
+#      缩容后，可以观察到有2个pod: Running
+#    kubectl describe -n scheduler-controller-replicaset-test replicasets.apps frontend-replicaset
+#      可以观察Events: pod的创建和删除的历史记录
+#    kubectl delete -f scheduler-controller-replicaset.yaml
+#      回收
+##########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-controller-replicaset-test
+---
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: frontend-replicaset
+  namespace: scheduler-controller-replicaset-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

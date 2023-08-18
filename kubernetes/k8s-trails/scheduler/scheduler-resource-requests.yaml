@@ -1,0 +1,35 @@
+########################################
+#  Resource Requests
+#
+#  实验:
+#    kubectl apply -f scheduler-resource-requests.yaml
+#    kubectl get -f scheduler-resource-requests.yaml -o wide
+#    kubectl get pods -n scheduler-resource-requests-test scheduler-resource-requests-test -o jsonpath='{.spec.containers[0].resources}' | jq
+#    kubectl delete -f scheduler-resource-requests.yaml
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-resource-requests-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: scheduler-resource-requests-test
+  namespace: scheduler-resource-requests-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: scheduler-resource-requests-test
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 200m
+---

@@ -1,0 +1,138 @@
+##########################################
+#  PodAffinity（Pod 亲和性）
+#    用于在Pod定义中指定与其他Pod亲和性规则，控制 Pod 之间的位置关系，以便将它们调度到同一节点或具有相关性的节点上。
+#    Pod Affinity 的条件要求必须在同一个命名空间中存在符合条件的其他 Pod
+# 
+#  声明解释:
+#    Deployment backend 中的定义
+#      没有特别声明调度时的选择，调度时的分布情况依赖实际的集群资源分配情况
+#      pod会尽量分布在满足资源请求的不同节点上
+#    Deployment frontend 中定义中的podAffinity:
+#      将具有"app:frontend"标签的Pod 与具有"app:backend"标签的其他Pod 部署到同一节点上
+#      其中，"app in backend" : 表示frontend pod 与"app:backend"标签的Pod 亲和
+#      其中，"topologyKey: kubernetes.io/hostname" : 部署在相同的节点名称
+#    Deployment frontend-compared 中的定义
+#      没有使用podAffinity
+#      可以和使用了podAffinity的Deployment frontend 进行对比
+#      pod会尽量分布在满足资源请求的不同节点上
+#
+#  实验环境: 至少有 三个满足资源请求的 并且 可用的节点
+#
+#  实验结果的预期是:
+#    Deployment backend 声明了2个pod: 会分布在2个节点上
+#    Deployment frontend 声明了3个pod: 会分布在和backend pod一样的2个节点上
+#    Deployment frontend-compared 声明了3个pod: 会分布在3个节点上
+#
+#  实验:
+#    kubectl apply -f scheduler-pod-affinity.yaml 
+#    kubectl get -f scheduler-pod-affinity.yaml -o wide
+#    kubectl get pods -n scheduler-pod-affinity-test --sort-by=.spec.nodeName -o wide |grep compared
+#      可以观察到: deployment frontend-compared pods 被调度到3个不同的节点上
+#        其中, 每个节点了部署了一个frontend-compared pod
+#    kubectl get pods -n scheduler-pod-affinity-test --sort-by=.spec.nodeName -o wide |grep -v compared
+#      可以观察到: deployment backend pods 调度到2个不同的节点
+#        其中, 一个节点: 部署了1个backend pod, 1个frontend pod
+#        其中, 一个节点: 部署了1个backend pod, 2个frontend pod; 可以和frontend-compared pods的分布对比
+#    kubectl delete -f scheduler-pod-affinity.yaml
+#      回收
+##########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-pod-affinity-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: scheduler-pod-affinity-test
+spec:
+  replicas: 2 
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: scheduler-pod-affinity-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      affinity:
+        podAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - backend
+            topologyKey: kubernetes.io/hostname
+      containers:
+      - name: frontend
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-compared
+  namespace: scheduler-pod-affinity-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: frontend-compared
+  template:
+    metadata:
+      labels:
+        app: frontend-compared
+    spec:
+      containers:
+      - name: frontend-compared
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

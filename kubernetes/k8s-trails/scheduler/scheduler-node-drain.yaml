@@ -1,0 +1,76 @@
+#####################################
+#  kubectl drain 命令: 从节点上驱逐Pod，并将其重新调度到其他可用节点上
+#
+#  drain操作:
+#    kubectl drain --help
+#    kubectl drain node-name --ignore-daemonsets
+#    kubectl drain node-name --force
+# 
+#  实验环境:
+#    有三个节点: k8svm01 k8svm02 k8svm03
+#  
+#  声明解释:
+#    当三个节点资源足够时，drain-test-deployment声明了3个副本Pod，会被调度的3个节点部署
+#
+#  实验结果预期:
+#    执行节点驱逐操作，节点上的 Pod 被驱逐并重新调度到其他节点上
+#  
+#  实验:
+#    kubectl apply -f scheduler-node-drain.yaml 
+#    kubectl get -f scheduler-node-drain.yaml 
+#    kubectl get pods -n scheduler-node-drain-test --sort-by=.spec.nodeName -o wide
+#      可以发现pods分布在3个不同节点
+#    kubectl drain k8svm03 --ignore-daemonsets
+#      执行节点驱逐: k8svm03
+#      节点驱逐时会先执行: cordon，确保不会有新的Pod调度到节点上
+#    kubectl get pods -n scheduler-node-drain-test --sort-by=.spec.nodeName -o wide
+#      可以观察到新的Pod被调度
+#    kubectl get nodes
+#      可以观察到其中一个节点的Status是: SchedulingDisabled
+#
+#  恢复实验环境:
+#    kubectl uncordon k8svm03
+#      恢复允许节点重新接收调度请求，恢复实验环境
+#    kubectl get nodes
+#      确定节点状态不再是: SchedulingDisabled
+#    kubectl delete -f scheduler-node-drain.yaml 
+#      回收
+#####################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-node-drain-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: drain-test-deployment
+  namespace: scheduler-node-drain-test
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: drain-test
+  template:
+    metadata:
+      labels:
+        app: drain-test
+    spec:
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        lifecycle:
+          preStop:
+            exec:
+              command: ["sh", "-c", "echo 'Performing cleanup tasks before termination'; sleep 10;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

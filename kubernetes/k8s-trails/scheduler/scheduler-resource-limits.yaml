@@ -1,0 +1,33 @@
+########################################
+#  Resource Limits
+#  
+#  实验:
+#    kubectl apply -f scheduler-resource-limits.yaml
+#    kubectl get -f scheduler-resource-limits.yaml
+#    kubectl get pods -n scheduler-resource-limits-test scheduler-resource-limits-test -o jsonpath='{.spec.containers[0].resources}' | jq
+#      当只设置limits时，默认requests和limits相同
+#    kubectl delete -f scheduler-resource-limits.yaml
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-resource-limits-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: scheduler-resource-limits-test
+  namespace: scheduler-resource-limits-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: scheduler-resource-limits-test
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        limits:
+          memory: 64Mi
+          cpu: 200m
+---

@@ -1,0 +1,66 @@
+##########################################
+#  NodeSelector（节点选择器）是 Kubernetes 中用于选择特定节点的机制
+#  通过使用 NodeSelector，可以将 Pod 调度到具有指定标签的节点上
+#
+#  准备:
+#    列出集群中的节点
+#      kubectl get nodes
+#    显示所有节点及其关联的标签
+#      kubectl get nodes --show-labels
+#    对目标节点添加标签
+#      语法格式: kubectl label nodes <node-name> <label-key>=<label-value>
+#      举例: kubectl label nodes node1 role=backend
+#    对目标节点删除标签
+#      语法格式: kubectl label nodes <node-name> <label-key>-
+#      举例: kubectl label nodes node1 role-
+#
+# 
+#  实验:
+#    kubectl apply -f scheduler-node-selector.yaml 
+#    kubectl get pods -n scheduler-node-selector-test -o wide
+#      观察到三个pod的STATUS都是Pending, 因为没有适合NodeSelector调度的节点
+#    为节点添加标签:role=http-echo, 例如节点是: k8svm02
+#      kubectl label nodes k8svm02 role=http-echo
+#    kubectl get pods -n scheduler-node-selector-test -o wide
+#      观察到NODE字段: 是设置标签role=http-echo的同一个节点, 说明3个pod都被调度到了这个节点上
+#    为节点删除标签:role=http-echo, 例如节点是: k8svm02
+#      kubectl label nodes k8svm02 role-
+#    kubectl delete -f scheduler-node-selector.yaml 
+#      回收
+##########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-node-selector-test
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: scheduler-node-selector-test
+  namespace: scheduler-node-selector-test
+spec:
+  replicas: 3 
+  selector:
+    matchLabels:
+      app: pod-with-node-selector
+  template:
+    metadata:
+      labels:
+        app: pod-with-node-selector
+    spec:
+      nodeSelector:
+        role: http-echo
+      containers:
+      - name: pod-with-node-selector
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["sh", "-c", "sleep 3600;"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---

@@ -36,6 +36,27 @@
 	- Taints和Tolerations
 
 
+# 实验
+
+实验步骤和实验详情: 参考具体的下面这些具体的文件内容
+
+```txt
+详情见: k8s-trails目录
+├── pod-created-normal.yaml
+├── pod-created-static.yaml
+├── pod-downward-env.yaml
+├── pod-downward-volume.yaml
+├── pod-init-container.yaml
+├── pod-lifecycle-failed.yaml
+├── pod-lifecycle-pending.yaml
+├── pod-lifecycle-successed.yaml
+├── pod-probe-liveness-check.yaml
+├── pod-probe-readiness-check.yaml
+├── pod-restart-always.yaml
+├── pod-restart-never.yaml
+├── pod-restart-onfailure.yaml
+└── pod-taints-tolerations.yaml
+```
 
 
 # Pod的基本概念
@@ -76,7 +97,15 @@ Pause 容器被设计成一个特殊的非常轻量级的容器，它不运行�
 
 
 
-
+具体来说，Pod中的容器可以共享的资源有：
+- PID命名空间：Pod中的不同应用程序可以看到其他应用程序的进程ID；
+	- 在Kubernetes1.8版本之前默认支持Pod PID namespace 共享，
+	- 在之后的版本中默认关闭了PID namespace共享
+- 网络命名空间：Pod中的多个容器能够访问同一个IP和端口范围；
+- IPC命名空间：Pod中的多个容器能够使用SystemV IPC或POSIX消息队列进行通信；
+- UTS命名空间：Pod中的多个容器共享一个主机名；
+- Volumes（共享存储卷）：Pod中的各个容器可以访问在Pod级别定
+义的存储卷
 
 
 
@@ -291,24 +320,3 @@ Taints 和 Tolerations 是 Kubernetes 中用于调度和容错的机制，用于
 - 控制 Pod 在集群中的分布和调度。
 
 
-
-# 实验
-
-详情见: k8s-trails目录
-
-```txt
-├── pod-created-normal.yaml
-├── pod-created-static.yaml
-├── pod-downward-env.yaml
-├── pod-downward-volume.yaml
-├── pod-init-container.yaml
-├── pod-lifecycle-failed.yaml
-├── pod-lifecycle-pending.yaml
-├── pod-lifecycle-successed.yaml
-├── pod-probe-liveness-check.yaml
-├── pod-probe-readiness-check.yaml
-├── pod-restart-always.yaml
-├── pod-restart-never.yaml
-├── pod-restart-onfailure.yaml
-└── pod-taints-tolerations.yaml
-```

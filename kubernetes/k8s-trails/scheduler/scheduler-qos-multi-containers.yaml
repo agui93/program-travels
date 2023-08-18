@@ -1,0 +1,179 @@
+########################################
+# Pod QoS (Quality of Service) 
+#   Kubernetes 根据为 Pod 中的容器指定的资源约束为每个 Pod 设置 QoS 类
+#   Kubernetes 依赖这种分类来决定当 Node 上没有足够可用资源时要驱逐哪些 Pod
+#
+# 实验: pod 内有2个 container
+#   kubectl apply -f scheduler-qos-multi-containers.yaml
+#   kubectl get -f scheduler-qos-multi-containers.yaml
+#   kubectl get pods -n scheduler-qos-multi-containers-test -o jsonpath='{range .items[*]}{.metadata.name} {.status.qosClass}{"\n"}{end}'
+#   kubectl get pods -n scheduler-qos-multi-containers-test -o jsonpath='{range .items[*]}{.metadata.name} {.status.qosClass} {range .spec.containers[*]}{"\n  "}{.name} {.resources}{end}{"\n"}{end}'
+#     输出每个pod的QoS类型，已经每个pod内的Container的resources的配置情况
+#
+#   kubectl delete -f scheduler-qos-multi-containers.yaml
+#     回收
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-qos-multi-containers-test
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-besteffort
+  namespace: scheduler-qos-multi-containers-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: first-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+    - name: second-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-burstable-01
+  namespace: scheduler-qos-multi-containers-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: first-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 120m
+    - name: second-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 32Mi
+          cpu: 100m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-burstable-02
+  namespace: scheduler-qos-multi-containers-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: first-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 120m
+    - name: second-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 120m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-burstable-03
+  namespace: scheduler-qos-multi-containers-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: first-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+    - name: second-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 32Mi
+          cpu: 100m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-burstable-04
+  namespace: scheduler-qos-multi-containers-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: first-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+    - name: second-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 64Mi
+          cpu: 120m
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: qos-guaranteed
+  namespace: scheduler-qos-multi-containers-test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: first-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 32Mi
+          cpu: 100m
+    - name: second-container
+      image: k8strials.harbor.com/library/busybox:latest
+      imagePullPolicy: IfNotPresent
+      command: ["sh", "-c", "sleep 3600;"]
+      resources:
+        requests:
+          memory: 32Mi
+          cpu: 100m
+        limits:
+          memory: 32Mi
+          cpu: 100m
+---

@@ -1,0 +1,38 @@
+########################################
+#  Job Controller : 用于管理短暂任务（one-off tasks）或批处理作业（batch jobs)
+#
+#  实验:
+#    kubectl apply -f scheduler-controller-job.yaml 
+#    kubectl get -f scheduler-controller-job.yaml -o wide
+#    kubectl get -n scheduler-controller-job-test pods -o wide
+#    kubectl delete -f scheduler-controller-job.yaml 
+#      回收
+########################################
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: scheduler-controller-job-test
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: job-test-01
+  namespace: scheduler-controller-job-test
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: main-container
+        image: k8strials.harbor.com/library/busybox:latest
+        imagePullPolicy: IfNotPresent
+        command: ["echo", "Hello, Kubernetes!"]
+        resources:
+          requests:
+            memory: 32Mi
+            cpu: 100m
+          limits:
+            memory: 32Mi
+            cpu: 100m
+---
