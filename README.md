@@ -2,9 +2,13 @@
 # 网络
 
 ## 网络原理
+- [Network常用的概念和设备](network/experiments/Network实验中常用的概念和设备/Network实验中常用的概念和设备.md)
 - [Network Architecture(包括: 脑图 概念 架构等)](network/principles/Network的Architecture/Network的Architecture.md)
-- [Network相关的Questions](network/principles/Network相关的Questions/Network相关的Questions.md)
 - [Network源码阅读](network/principles/Network源码/Network源码.md)
+- [Network Questions: 思考Network原理的引子](network/principles/Network相关的Questions/Network相关的Questions.md)
+- [Network编程](network/principles/Network编程/Network编程.md)
+- [Network性能分析的方法论](network/principles/Network性能分析的方法论/Network性能分析的方法论.md)
+- [Network常见的观测工具](network/experiments/Network观测工具/Network观测工具.md)
 ## 网络实验
 - [如何基于multipass构建LAN网络实验环境](network/experiments/LAN网络实验环境/readme.如何基于multipass构建LAN网络实验环境.md)
 - [如何基于docker构建tcpip详解实验环境](network/experiments/TcpIp详解实验环境/readme.TcpIp详解实验环境.md)
