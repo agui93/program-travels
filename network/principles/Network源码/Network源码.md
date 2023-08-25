@@ -1,0 +1,437 @@
+
+
+
+[linux online source](https://elixir.bootlin.com/linux/latest/source)
+
+
+- 网络包的接受
+	- 基本
+		- 资料
+			- [Linux网络包的接收](https://mp.weixin.qq.com/s/GoYDsfy9m0wRoXi_NCfCmg)
+			- [linux 3.10 online source](https://elixir.bootlin.com/linux/v3.10.108/source)
+			- 网卡驱动
+				- [intel系列的网卡驱动](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel)
+			- [net模块](https://elixir.bootlin.com/linux/v3.10.108/source/net)
+			- [kernel模块](https://elixir.bootlin.com/linux/v3.10.108/source/kernel)
+		- 基础
+			- 网卡驱动、硬中断、软中断和ksoftirqd线程
+	- 创建ksoftirqd内核线程
+		- [spawn_ksoftirqd](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L747)
+			- [ksoftirqd_should_run](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L636)
+			- [run_ksoftirqd](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L641)
+			- 当ksoftirqd被创建出来以后，它就会进入自己的线程循环函数ksoftirqd_should_run和run_ksoftirqd了，不停地判断有没有软中断需要被处理
+		- [smpboot_register_percpu_thread](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/smpboot.c#L277)
+			- Linux的软中断都是在专门的内核线程（ksoftirqd）中进行的
+			- N个ksoftirqd，其中N等于机器的核数
+		- [软中断: softirqs](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/interrupt.h#L453)
+	- 网络子系统初始化
+		- [net_dev_init](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L6334)
+			- subsys_initcall: linux内核通过调用subsys_initcall, 初始化各个子系统
+			- [softnet_data struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/netdevice.h#L1799)
+				- Incoming packets are placed on per-cpu queues
+				- for_each_possible_cpu
+			- open_softirq(NET_TX_SOFTIRQ, net_tx_action);
+			- open_softirq(NET_RX_SOFTIRQ, net_rx_action);
+			- [open_softirq](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L415)
+				- softirq_vec\[nr\].action = action;
+				- softirq_vec变量
+	- 协议栈注册
+		- [inet_init](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L1699)
+			- fs_initcall(inet_init)
+			- Linux内核中的`fs_initcall`和`subsys_initcall`类似，也是初始化模块的入口。`fs_initcall`调用`inet_init`后开始网络协议栈注册
+		- inet_add_protocol
+			- [inet_add_protocol](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L1699)
+				- [inet_protos数组](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/protocol.c#L31)
+				- [Standard well-defined IP protocols](https://elixir.bootlin.com/linux/v3.10.108/source/include/uapi/linux/in.h#L30)
+			- inet_add_protocol(&icmp_protocol, IPPROTO_ICMP)
+				- handler: [icmp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/icmp.c#L846)
+			- inet_add_protocol(&udp_protocol, IPPROTO_UDP)
+				- handler: [udp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1764)
+			- inet_add_protocol(&tcp_protocol, IPPROTO_TCP)
+				- handler: [tcp_v4_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_ipv4.c#L1986)
+			- inet_add_protocol(&igmp_protocol, IPPROTO_IGMP)
+				- handler: [igmp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/igmp.c#L954)
+		- dev_add_pack
+			- [ip_packet_type](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L1694)
+			- handler: [ip_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_input.c#L375)
+				- Main IP Receive routine: 在软中断的上下文中执行的
+				- 软中断中会通过ptype_base找到ip_rcv函数地址，进而将ip包正确地送到ip_rcv()中执行。
+				- 在ip_rcv中将会通过inet_protos找到tcp或者udp的处理函数，再而把包转发给udp_rcv()或tcp_v4_rcv()函数
+				- netfilter/iptables
+	- 网卡驱动初始化
+		- [igb_init_module](https://elixir.bootlin.com/linux/v3.10.108/C/ident/igb_init_module)
+			- module_init(igb_init_module)
+			- 使用 module_init 向内核注册一个初始化函数，当驱动被加载时，内核会调用这个函数
+		- [igb_netdev_ops](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L1894)
+			- [net_device_ops struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/netdevice.h#L906)
+				- This structure defines the management hooks for network devices
+				- 驱动向内核注册了 structure net_device_ops 变量
+				- 包含着网卡启用、发包、设置mac 地址等回调函数（函数指针）
+			- ethtool命令
+		- [igb_alloc_q_vector](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L1154)
+			- [netif_napi_add](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L4168)
+				- napi->poll = poll;
+			- igb_poll: 注册了一个NAPI机制所必须的poll函数，对于igb网卡驱动来说，这个函数就是igb_poll
+	- 启动网卡
+		- 当启用一个网卡时（例如，通过 ifconfig eth0 up），net_device_ops 中的 igb_open方法会被调用
+		- 分配了RingBuffer，并建立内存和Rx队列的映射关系
+		- 中断函数注册`igb_request_irq`
+		-  `__igb_open` => `igb_request_irq` => `igb_request_msix`, 在`igb_request_msix`
+			- 对于多队列的网卡，为每一个队列都注册了中断，其对应的中断处理函数是igb_msix_ring
+			- msix方式下，每个 RX 队列有独立的MSI-X 中断，从网卡硬件中断的层面就可以设置让收到的包被不同的 CPU处理
+			- 可以通过 irqbalance ，或者修改/proc/irq/IRQ_NUMBER/smp_affinity能够修改和CPU的绑定行为
+		- 网卡的硬中断注册的处理函数是igb_msix_ring
+	- 硬中断处理
+		- [igb_msix_ring](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L5104)
+			- `igb_write_itr`只是记录一下硬件中断频率
+			- `__napi_schedule` => `____napi_schedule`
+		- [napi_schedule](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/netdevice.h#L423)
+			- [\_\_\_\_napi_schedule](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L2908)
+				- list_add_tail(&napi->poll_list, &sd->poll_list);
+					- `list_add_tail`修改了CPU变量softnet_data里的poll_list，将驱动napi_struct传过来的poll_list添加了进来
+				- \_\_raise_softirq_irqoff(NET_RX_SOFTIRQ);
+					- 触发了一个软中断NET_RX_SOFTIRQ
+			- [\_\_raise_softirq_irqoff](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L409)
+				- 触发过程是对一个变量进行了一次或运算
+				- [写local_softirq_pending](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/interrupt.h#L429)
+	- ksoftirqd内核线程处理软中断
+		- [ksoftirqd_should_run](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L636)
+		- [run_ksoftirqd](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L641)
+			- [读local_softirq_pending](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/irq_cpustat.h#L25)
+			- [\_\_do_softirq](https://elixir.bootlin.com/linux/v3.10.108/source/kernel/softirq.c#L211)
+				- 判断根据当前CPU的软中断类型，调用其注册的action方法
+				- 在网络子系统初始化时，NET_RX_SOFTIRQ注册了的处理函数是net_rx_action。所以`net_rx_action`函数就会被执行到了
+				- 硬中断中设置软中断标记，和ksoftirq的判断是否有软中断到达，都是基于smp_processor_id()
+					- 意味着只要硬中断在哪个CPU上被响应，那么软中断也是在这个CPU上处理的
+		- [net_rx_action](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L4208)
+			- igb_poll
+				- igb_clean_rx_irq
+			- napi_gro_receive
+			- napi_skb_finish
+				- [netif_receive_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L3648)
+				- 在`netif_receive_skb`中，数据包将被送到协议栈中
+				- `netif_receive_skb`函数会根据包的协议，假如是udp包，会将包依次送到ip_rcv(),udp_rcv()协议处理函数中进行处理
+	- 网络协议栈的处理
+		- [netif_receive_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L3648)
+			- [__netif_receive_skb_core](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L3464)
+			- `if (!ptype->dev || ptype->dev == skb->dev)`
+				- pcap逻辑，这里会将数据送入抓包点。tcpdump就是从这个入口获取包的
+			- `&ptype_base[ntohs(type) & PTYPE_HASH_MASK]`
+				- `type = skb->protocol;`
+		- [ip_packet_type](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L1811)
+			- 对于ip包来讲，就会进入到`ip_rcv`
+		- [arp_packet_type](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/arp.c#L1280)
+			- 对于arp包的话，会进入到`arp_rcv`
+	- IP协议层处理
+		- [ip_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_input.c#L375)
+			- `NF_HOOK`: Netfilter
+			- `NF_HOOK(NFPROTO_IPV4, NF_INET_PRE_ROUTING, skb, dev, NULL,ip_rcv_finish)`
+				- NF_INET_PRE_ROUTING
+				- 执行完注册的钩子后就会执行到最后一个参数指向的函数`ip_rcv_finish`
+		- [ip_rcv_finish](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_input.c#L311)
+			- [ip_route_input_noref](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/route.c#L1787)
+				- 路由选择
+				- [ ip_route_input_mc](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/route.c#L1395)
+					- 多播路由
+					- 如果是本机接受的ip包: `dst.input= ip_local_deliver;`
+				- [ip_route_input_slow](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/route.c#L1607)
+					- `dst.input= ip_local_deliver;`
+			- [dst_input](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/dst.h#L452)
+				- Input packet from network to transport
+				- 调用dst.input
+		- [ip_local_deliver](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_input.c#L244)
+			- `NF_HOOK(NFPROTO_IPV4, NF_INET_LOCAL_IN, skb, skb->dev, NULL,ip_local_deliver_finish);`
+			- Netfilter: NF_INET_LOCAL_IN
+			- ip_local_deliver_finish
+		- [ip_local_deliver_finish](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_input.c#L189)
+			- `inet_protos[protocol]`
+			- inet_protos中保存着tcp_rcv()和udp_rcv()的函数地址
+			- - [inet_add_protocol](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L1699)
+				- [inet_protos数组](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/protocol.c#L31)
+				- [Standard well-defined IP protocols](https://elixir.bootlin.com/linux/v3.10.108/source/include/uapi/linux/in.h#L30)
+			- inet_add_protocol(&icmp_protocol, IPPROTO_ICMP)
+				- handler: [icmp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/icmp.c#L846)
+			- inet_add_protocol(&udp_protocol, IPPROTO_UDP)
+				- handler: [udp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1764)
+			- inet_add_protocol(&tcp_protocol, IPPROTO_TCP)
+				- handler: [tcp_v4_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_ipv4.c#L1986)
+			- inet_add_protocol(&igmp_protocol, IPPROTO_IGMP)
+				- handler: [igmp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/igmp.c#L954)
+	- UDP协议层处理
+		- [udp_rcv](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1764)
+		- [\_\_udp4_lib_lookup_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L545)
+			- 根据skb来寻找对应的socket
+		- [udp_queue_rcv_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1439)
+			- `!sock_owned_by_user`
+				- [\_\_udp_queue_rcv_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1398)
+				- [sock_queue_rcv_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/sock.c#L432)
+					- `list = &sk->sk_receive_queue;`
+					- `__skb_queue_tail(list, skb)`
+					- 直接放到socket的接收队列中
+			- [sk_add_backlog](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/sock.h#L782)
+				- `sk->sk_backlog`
+				- 把数据包添加到backlog队列
+			- `sk_rcvqueues_full`接收队列如果满了的话，将直接把包丢弃
+				- 接收队列大小受内核参数net.core.rmem_max和net.core.rmem_default影响
+		- 目标不可达的icmp包
+			- `icmp_send(skb, ICMP_DEST_UNREACH, ICMP_PORT_UNREACH, 0);`
+	- [recvfrom系统调用](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L1801)
+		- [socket struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/net.h#L104)
+			- struct socket - general BSD socket
+				- `struct sock		*sk;`
+				- `const struct proto_ops	*ops;`
+			- [sock struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/sock.h#L286)
+				- network layer representation of sockets
+				- `sk_prot` : 指向udp_prot的指针
+			- [struct proto udp_prot](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1979)
+				- `.sendmsg	   = udp_sendmsg,`
+				- `.recvmsg	   = udp_recvmsg,`
+			- [struct proto_ops inet_dgram_ops](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L965)
+				- `.recvmsg       = inet_recvmsg,`
+				- `.sendmsg       = inet_sendmsg,`
+		- [inet_recvmsg](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L795)
+			- 在`inet_recvmsg`调用了`sk->sk_prot->recvmsg`
+			- 对于udp协议的socket来说，`sk_prot`是`struct proto udp_prot`
+		- [udp_recvmsg](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/udp.c#L1201)
+			- [\_\_skb_recv_datagram](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/datagram.c#L191)
+				- Receive a datagram skbuff
+				- `struct sk_buff_head *queue = &sk->sk_receive_queue;`
+			- 读取过程，就是访问`sk->sk_receive_queue`
+
+
+	
+- 网络包的发送
+	- 基本
+		- [Linux 网络包的发送](https://mp.weixin.qq.com/s/wThfD9th9e_-YGHJJ3HXNQ)
+		- [socket accept](https://mp.weixin.qq.com/s?__biz=MjM5Njg5NDgwNA==&mid=2247484905&idx=1&sn=a74ed5d7551c4fb80a8abe057405ea5e)
+		- [Linux source online](https://elixir.bootlin.com/linux/v3.10.108/source)
+	- socket相关
+		- 基本的数据结构
+			- [struct task_struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/sched.h#L1041)
+				- `struct files_struct *files;` : open file information
+			- [files_struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/fdtable.h#L45)
+				- Open file table structure
+				- `struct fdtable __rcu *fdt;` 
+			- [fdtable](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/fdtable.h#L24)
+				- `struct file __rcu **fd;` : current fd array
+			- [file](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/fs.h#L764)
+				- `const struct file_operations	*f_op;` socket编程时，指向socket_file_ops的指针
+				- `void			*private_data;` : socket编程时，指向socket的指针
+		- [static const struct file_operations socket_file_ops ](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L135)
+			- `.aio_read =	sock_aio_read,`
+				- [sock_aio_read](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L921)
+			- `.aio_write =	sock_aio_write,`
+				- [sock_aio_write](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L963)
+			- `.poll =		sock_poll,`
+				- [sock_poll](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L1144)
+		- [socket struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/net.h#L104)
+			- struct socket - general BSD socket
+				- `struct sock		*sk;`  : 指向sock的指针
+				- `const struct proto_ops	*ops;` : 指向[inet_stream_ops](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L937)的指针，或者指向inet_dstream_ops的指针
+			- [sock struct](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/sock.h#L286)
+				- network layer representation of sockets
+				- `sk_prot`: 指向[tcp_prot](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_ipv4.c#L2880)的指针
+				- `sk_receive_queue`: 接受队列
+				- `sk_wq`: 等待队列，sock wait queue and async head
+				- `sk_data_ready`: callback to indicate there is data to be processed
+				- `sk_write_queue`: 发送队列, Packet sending queue
+			- [inet_stream_ops](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L937)
+				- `.bind		   = inet_bind,`
+				- `.connect	   = inet_stream_connect,
+				- `.accept		   = inet_accept,
+				- `.getname	   = inet_getname,
+				- `.poll		   = tcp_poll,`
+				- `.ioctl		   = inet_ioctl,`
+				- `.listen		   = inet_listen,`
+				- `.shutdown	   = inet_shutdown,`
+				- `.setsockopt   = sock_common_setsockopt,`
+				- `.getsockopt  = sock_common_getsockopt,`
+				- `.sendmsg	   = inet_sendmsg,`
+				- `.recvmsg	   = inet_recvmsg,`
+				- `.mmap		   = sock_no_mmap,`
+			- [tcp_prot](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_ipv4.c#L2880)
+				- `.close			= tcp_close,`
+				- `.connect		= tcp_v4_connect,`
+				- `.disconnect	= tcp_disconnect,`
+				- `.accept			= inet_csk_accept,`
+				- `.recvmsg		= tcp_recvmsg,`
+				- `.sendmsg		= tcp_sendmsg,`
+				- `.backlog_rcv	= tcp_v4_do_rcv,`
+				- `.ioctl			= tcp_ioctl,`
+				- `.init			= tcp_v4_init_sock,`
+				- `.destroy		= tcp_v4_destroy_sock,`
+		- accpet系统调用
+			- [accpet sys call](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L1560)
+				- attempt to create a new socket, 
+				- set up the link with the client, 
+				- wake up the client, 
+				- then return the new connected fd
+		- [sendmmsg系统调用](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L2176)
+	- [send系统调用](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L1801)
+		- [sendto](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L1754)
+			- `sock = sockfd_lookup_light(fd, &err, &fput_needed);`
+			- `sock_sendmsg(sock, &msg, len);`
+			- [sock_sendmsg](https://elixir.bootlin.com/linux/v3.10.108/source/net/socket.c#L637)
+				- `sock->ops->sendmsg(iocb, sock, msg, size);`
+				- 当sosc->ops指向[inet_stream_ops](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L937)的指针时，sendmsg实际是inet_sendmsg
+	- [inet_sendmsg](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/af_inet.c#L761)
+		- `sk->sk_prot->sendmsg(iocb, sk, msg, size);`
+		- 当sk->sk_port指向[tcp_prot](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_ipv4.c#L2880)的指针时，sendmsg实际是tcp_sendmsg
+		- 当sk->sk_port指向udp_prot的指针时，sendmsg实际是udp_sendmsg
+	- 传输层拷贝: [tcp_sendmsg](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp.c#L1036)
+		- 获取发送队列: [tcp_write_queue_tail(sk);](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/tcp.h#L1347)
+			- 获取 socket 发送队列中的最后一个 skb
+			- skb: [struct sk_buff - socket buffer](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/skbuff.h#L400)
+			- 获取skb->len
+		- 申请skb，并添加到发送队列的尾部
+			- 其中，msg->msg_iov 存储的是用户态内存的要发送的数据的 buffer
+			- 申请skb: `skb = sk_stream_alloc_skb(sk,	 select_size(sk, sg),sk->sk_allocation);`
+			- 把 skb 挂到socket的发送队列上: [skb_entail(sk, skb);](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp.c#L598)
+				- [tcp_add_write_queue_tail](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/tcp.h#L1410)
+					- `__skb_queue_tail(&sk->sk_write_queue, skb);`
+		- 实际的发送
+			- 满足 `forced_push(tp)` 或者 `skb == tcp_send_head(sk)` 成立
+				- 其中 `forced_push(tp)` 判断的是未发送的数据数据是否已经超过最大窗口的一半
+				- [\_\_tcp_push_pending_frames](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_output.c#L2047)
+				- [tcp_push_one](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_output.c#L2065)
+			- 条件都不满足的话，要发送的数据只是拷贝到内核就算完事
+	- 传输层发送: [tcp_write_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_output.c#L1826)
+		- This routine writes packets to the network.
+		- 滑动窗口、拥塞控制就是在这个函数中完成的
+		- [tcp_transmit_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_output.c#L841)执行发送
+			- clone skb
+				- 收到对方的 ACK 之前，skb 不能被删除，所以要clone
+			- Build TCP header and checksum it
+				- skb 内部其实包含了网络协议中所有的 header
+				- 在设置 TCP 头的时候，只是把指针指向 skb 的合适位置
+				- 后续再设置 IP 头的时候，在把指针指向 skb 的合适位置
+			- `icsk->icsk_af_ops->queue_xmit(skb, &inet->cork.fl);`
+				- 调用了网络层提供的发送接口
+				- `const struct inet_connection_sock *icsk = inet_csk(sk);`
+					- [inet_csk](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/inet_connection_sock.h#L140)
+				- `const struct tcp_congestion_ops *icsk_ca_ops;`
+					- [icsk_ca_ops](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/inet_connection_sock.h#L99)
+				- `const struct inet_connection_sock_af_ops ipv4_specific`
+					- [struct inet_connection_sock_af_ops](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/tcp_ipv4.c#L2155)
+					- [ip_queue_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L329)
+	- 网络层发送处理: [ip_queue_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L329)
+		- 在网络层里主要处理路由项查找、IP 头设置、netfilter 过滤、skb 切分（大于 MTU 的话）等几项工作
+		- 查找路由: 
+			- 路由缓存：`skb_rtable(skb);`
+			- 查找路由：`rt = ip_route_output_ports`
+				- [ip_route_output_ports](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/route.h#L136)
+					- [ip_route_output_flow](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/route.c#L2230)
+						- [\_\_ip_route_output_key](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/route.c#L1972)
+						- 路由选择决定的dst.output: `rth->dst.output = ip_output;`
+				- 缓存路由：`skb_dst_set_noref(skb, &rt->dst);`
+				- [\_\_skb_dst_set_noref](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dst.c#L340)
+					- `skb->_skb_refdst`
+		- build IP header
+			- `iph = ip_hdr(skb);`
+			- ttl
+			- protocol
+			- fl4
+			- options
+		- `ip_local_out(skb);`
+			- [ip_local_out](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L107)
+			- [\_\_ip_local_out](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L94)
+				- `nf_hook(NFPROTO_IPV4, NF_INET_LOCAL_OUT, skb, NULL, skb_dst(skb)->dev, dst_output);`
+				- netfilter: NF_INET_LOCAL_OUT
+				- dst_output: `skb_dst(skb)->output(skb);`
+					- [skb_dst(skb)](https://elixir.bootlin.com/linux/v3.10.108/source/include/linux/skbuff.h#L547)
+					- `(struct dst_entry *)(skb->_skb_refdst & SKB_DST_PTRMASK);`
+					- 缓存的路由(dst 项): output指向`ip_output`
+			- dst.output: [ip_output](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L301)
+				- netfilter: NF_INET_POST_ROUTING
+				- [ip_finish_output](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L225)
+					- 如果数据大于 MTU 的话，是会执行分片的: [ip_fragment](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L451)
+					- [ip_finish_output2](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/ip_output.c#L169)
+						- 邻居子系统
+							- `__ipv4_neigh_lookup_noref`
+							- `__neigh_create`
+							- `dst_neigh_output(dst, neigh, skb);`
+	- 邻居子系统
+		- `neigh = __ipv4_neigh_lookup_noref(dev, nexthop);`
+			- 在 arp 缓存中进行查找，其第二个参数传入的是路由下一跳 IP 信息
+			- [\_\_ipv4_neigh_lookup_noref](https://elixir.bootlin.com/linux/v3.10.108/source/include/net/arp.h#L19)
+		- `__neigh_create`
+			- 调用 \_\_neigh_create 创建一个邻居
+			- [\_\_neigh_create](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/neighbour.c#L461)
+		- `dst_neigh_output(dst, neigh, skb);`
+			- output是: `neigh_resolve_output`
+				- [arp_generic_ops](https://elixir.bootlin.com/linux/v3.10.108/source/net/ipv4/arp.c#L130)
+				- [neigh_resolve_output](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/neighbour.c#L1287)
+		- [neigh_resolve_output](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/neighbour.c#L1287)
+			- 这个函数内部有可能会发出 arp 网络请求
+			- 当获取到硬件 MAC 地址以后，就可以封装 skb 的 MAC 头了。最后调用 dev_queue_xmit 将 skb 传递给 Linux 网络设备子系统
+			- 发送: [dev_queue_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L2812)
+	- 网络设备子系统
+		- [dev_queue_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L2812)
+			- `txq = netdev_pick_tx(dev, skb);`
+				- 选择发送队列
+				- 发送队列的选择受 XPS 等配置的影响，而且还有缓存
+			- `q = rcu_dereference_bh(txq->qdisc);`
+				- 获取与此队列关联的排队规则
+			- `rc = __dev_xmit_skb(skb, q, dev, txq);`
+				- 如果有队列，则调用__dev_xmit_skb 继续处理数据
+				- 大部分的设备都有队列（回环设备和隧道设备除外）
+		- [\_\_dev_xmit_skb](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L2688)
+			- `q->enqueue(skb, q)`
+			- [\_\_qdisc_run](https://elixir.bootlin.com/linux/v3.10.108/source/net/sched/sch_generic.c#L189)
+				- 循环从队列取出一个 skb 并发送
+					- [qdisc_restart](https://elixir.bootlin.com/linux/v3.10.108/source/net/sched/sch_generic.c#L170)
+						- `skb = dequeue_skb(q);` : 从 qdisc 中取出要发送的 skb  
+						- [sch_direct_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/sched/sch_generic.c#L113)
+							- 调用驱动程序来发送数据: `ret = dev_hard_start_xmit(skb, dev, txq);`
+				- 如果发生下面情况之一，则延后处理：
+					- 1. quota 用尽
+					- 2. 其他进程需要 CPU
+					- 延后处理:
+						- 如果系统态 CPU 发送网络包不够用的时候，会调用 `__netif_schedule` 触发一个软中断。
+						- 该函数会进入到 `__netif_reschedule`，由它来实际发出 NET_TX_SOFTIRQ 类型软中断
+					- [\_\_netif_schedule](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L2135)
+						- `sd->output_queue_tailp = &q->next_sched;`
+							- 设置要发送的数据队列，添加到 output_queue
+						- `raise_softirq_irqoff(NET_TX_SOFTIRQ);`
+							- 触发了 NET_TX_SOFTIRQ 类型的软中断
+							- NET_TX_SOFTIRQ softirq 注册的回调函数 `net_tx_action`
+							- 用户态进程触发完软中断之后，会有一个软中断内核线程会执行到 `net_tx_action`
+							- [net_tx_action](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L3248)
+								- 软中断这里会获取 softnet_data： ` struct softnet_data *sd = &__get_cpu_var(softnet_data);`
+								- 软中断循环遍历 sd->output_queue 发送数据帧
+								- 也会调用到 `__qdisc_run`
+								- 一样就是进入 qdisc_restart => sch_direct_xmit，直到驱动程序函数 `dev_hard_start_xmit`
+	- 网卡驱动发送
+		- [dev_hard_start_xmit](https://elixir.bootlin.com/linux/v3.10.108/source/net/core/dev.c#L2547)
+			- `const struct net_device_ops *ops = dev->netdev_ops;`
+			- `features = netif_skb_features(skb);`: 获取设备支持的功能列表
+			- `ops->ndo_start_xmit(skb, dev);`: 将数据包传给网卡设备，进入驱动程序
+		- [igb igb_netdev_ops](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L1897)
+			- [igb_xmit_frame](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L4717)
+			- [igb_xmit_frame_ring](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L4627)
+			- `first = &tx_ring->tx_buffer_info[tx_ring->next_to_use];`
+				- 获取TX Queue 中下一个可用缓冲区信息
+			- [`igb_tx_map(tx_ring, first, hdr_len);`](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L4464)
+				- igb_tx_map 函数准备给设备发送的数据
+				- igb_tx_map 函数处理将 skb 数据映射到网卡可访问的内存 DMA 区域
+				- 当所有需要的描述符都已建好，且 skb 的所有数据都映射到 DMA 地址后，驱动就会进入到它的最后一步，触发真实的发送
+	- 发送完成硬中断
+		- 在发送完成硬中断里，会执行 RingBuffer 内存的清理工作
+			- 无论硬中断是因为是有数据要接收，还是说发送完成通知，**网卡从硬中断触发的软中断都是 NET_RX_SOFTIRQ**
+		- 软中断的回调函数 [igb_poll](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L5948)
+		- [`igb_clean_tx_irq`](https://elixir.bootlin.com/linux/v3.10.108/source/drivers/net/ethernet/intel/igb/igb_main.c#L5982)
+			- Reclaim resources after transmit completes
+			- 清理了 skb，解除了 DMA 映射，传输才算是基本完成
+			- 因为传输层需要保证可靠性，所以 传输层用的skb 其实还没有删除。它得等收到对方的 ACK 之后才会真正删除，那个时候才算是彻底的发送完毕
+
+
+
+
+
+
+
+
+
+
+
+
