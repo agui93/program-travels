@@ -46,6 +46,17 @@
     - [Pod 实验](kubernetes/k8s-trails/pod)
 
 
+# 分布式系统
+- [模式总结: 分布式系统](distributed-system/distributed-system-patterns/分布式系统模式摘要.md)
+- [方案总结: 分布式系统](distributed-system/distributed-system-patterns/分布式系统模式中各种方案的摘要.md)
+
+
+# Java
+- [java 并发](java-trials/java-tech-stack/java-concurrency/Java并发.md)
+- [网络模型、Java NIO以及Java网络编程](java-trials/java-tech-stack/java-nio/Java网络编程.md)
+
+
+
 # 技术栈预览
 - RoadMaps
 	- [github developer roadmaps](https://github.com/kamranahmedse/developer-roadmap)
@@ -77,7 +88,4 @@
 
 
 
-# Java
-- [java 并发](java-trials/java-tech-stack/java-concurrency/Java并发.md)
-- [网络模型、Java NIO以及Java网络编程](java-trials/java-tech-stack/java-nio/Java网络编程.md)
 
